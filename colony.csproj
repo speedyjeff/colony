@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="engine\**" />
+    <EmbeddedResource Remove="engine\**" />
+    <None Remove="engine\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="engine\engine.Common\engine.Common.csproj" />
+    <ProjectReference Include="engine\engine.Winforms\engine.Winforms.csproj" />
+  </ItemGroup>
+
+</Project>
