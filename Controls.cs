@@ -19,6 +19,8 @@ namespace colony
             Buttons = new List<ControlDetails>();
         }
 
+        public Action<PheromoneType> OnSelectionChange { get; set; }
+
         public void AddControl(PheromoneType type, RGBA color, string purpose)
         {
             // add the control
@@ -28,6 +30,7 @@ namespace colony
             PreviousSurfaceWidth = PreviousSurfaceHeight = 0;
         } 
 
+        /*
         public bool TryGetSelectedId(out PheromoneType type)
         {
             for (int i = 0; i < Buttons.Count; i++)
@@ -43,6 +46,7 @@ namespace colony
             type = PheromoneType.None;
             return false;
         }
+        */
 
         public void MouseDown(MouseButton btn, float x, float y)
         {
@@ -58,12 +62,27 @@ namespace colony
             }
 
             // change state on if the click is within the bounds of the buttons
+            var notificationSent = false;
             for(int i=0; i<Buttons.Count; i++)
             {
                 Buttons[i].IsSelected = (x >= Buttons[i].Left &&
                     x <= Buttons[i].Left + Buttons[i].Width &&
                     y >= Buttons[i].Top &&
                     y <= Buttons[i].Top + Buttons[i].Height);
+
+                // notify that the selection has changed
+                if (OnSelectionChange != null && Buttons[i].IsSelected)
+                {
+                    // notify the caller
+                    OnSelectionChange(Buttons[i].Type);
+                    notificationSent = true;
+                }
+            }
+
+            // check if we need to clear the selection
+            if (!notificationSent && OnSelectionChange != null)
+            {
+                OnSelectionChange(PheromoneType.None);
             }
         }
 

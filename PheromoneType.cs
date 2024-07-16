@@ -13,6 +13,10 @@ namespace colony
         MoveEgg = 3,
         MoveFood = 4,
         MoveDeadAnt = 5,
-        MoveQueen = 6
+        MoveQueen = 6,
+        DropDirt = 7,
+        DropEgg = 8,
+        DropFood = 9,
+        DropDeadAnt = 10
     }
 }

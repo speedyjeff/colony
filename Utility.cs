@@ -11,7 +11,6 @@ namespace colony
     {
         public static float GetRandom(float variance)
         {
-            if (variance >= 1 || variance <= 0) return 0f;
             var int32buffer = new byte[4];
             Gen.GetNonZeroBytes(int32buffer);
             // ensure positive

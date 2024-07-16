@@ -13,6 +13,7 @@ namespace colony
             Width = terrain.Width;
             Height = terrain.Height;
             Terrain = terrain;
+            ActivePheromone = PheromoneType.None;
 
             // set the dirt chunk colors
             DirtColors = new RGBA[Terrain.Rows][];
@@ -77,42 +78,24 @@ namespace colony
                     }
 
                     // pheromones
-                    if (pheromones[(int)PheromoneType.MoveDirt] != PheromoneDirectionType.None)
+                    if (ActivePheromone == PheromoneType.MoveDirt)
                     {
-                        switch (pheromones[(int)PheromoneType.MoveDirt])
-                        {
-                            case PheromoneDirectionType.Up:
-                                g.Triangle(RedColor,
-                                    x + Terrain.BlockWidth / 2, y,
-                                    x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
-                                    x, y + Terrain.BlockHeight / 2, fill: true, border: false);
-                                break;
-                            case PheromoneDirectionType.Down:
-                                g.Triangle(RedColor,
-                                    x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight,
-                                    x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
-                                    x, y + Terrain.BlockHeight / 2, fill: true, border: false);
-                                break;
-                            case PheromoneDirectionType.Left:
-                                g.Triangle(RedColor,
-                                    x, y + Terrain.BlockHeight / 2,
-                                    x + Terrain.BlockWidth / 2, y,
-                                    x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight, fill: true, border: false);
-                                break;
-                            case PheromoneDirectionType.Right:
-                                g.Triangle(RedColor,
-                                    x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
-                                    x + Terrain.BlockWidth / 2, y,
-                                    x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight, fill: true, border: false);
-                                break;
-                            default:
-                                throw new Exception("invalid direction");
-                        }
+                        DisplayMovePheromone(g, RedColor, pheromones[(int)PheromoneType.MoveDirt], x, y);
+                    }
+                    if (ActivePheromone == PheromoneType.DropDirt)
+                    {
+                        DisplayDropPheromone(g, RedColor, pheromones[(int)PheromoneType.DropDirt], x, y);
                     }
                 }
             }
             // draw the rim
             g.Rectangle(PurpleColor, 0 - (Width / 2), 0 - (Height / 2), Width, Height, fill: false, border: true, thickness: 2f);
+        }
+
+        public void SetActivePheromone(PheromoneType type)
+        {
+            // set the active pheromone
+            ActivePheromone = type;
         }
 
         #region private
@@ -123,6 +106,51 @@ namespace colony
         private RGBA WhiteColor = new RGBA { R = 250, G = 250, B = 250, A = 50 };
         private RGBA RedColor = new RGBA { R = 255, G = 0, B = 0, A = 50 };
         private Terrain Terrain;
+        private PheromoneType ActivePheromone;
+
+        private void DisplayDropPheromone(IGraphics g, RGBA color, PheromoneDirectionType dir, float x, float y)
+        {
+            if (dir == PheromoneDirectionType.None) return;
+
+            // display drop Pheromone
+            g.Ellipse(color, x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight / 2, Terrain.BlockWidth / 4, Terrain.BlockHeight / 4, fill: true, border: false);
+        }
+
+        private void DisplayMovePheromone(IGraphics g, RGBA color, PheromoneDirectionType dir, float x, float y)
+        {
+            if (dir == PheromoneDirectionType.None) return;
+
+            // display the direction of the Pheromone
+            switch (dir)
+            {
+                case PheromoneDirectionType.Up:
+                    g.Triangle(color,
+                        x + Terrain.BlockWidth / 2, y,
+                        x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
+                        x, y + Terrain.BlockHeight / 2, fill: true, border: false);
+                    break;
+                case PheromoneDirectionType.Down:
+                    g.Triangle(color,
+                        x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight,
+                        x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
+                        x, y + Terrain.BlockHeight / 2, fill: true, border: false);
+                    break;
+                case PheromoneDirectionType.Left:
+                    g.Triangle(color,
+                        x, y + Terrain.BlockHeight / 2,
+                        x + Terrain.BlockWidth / 2, y,
+                        x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight, fill: true, border: false);
+                    break;
+                case PheromoneDirectionType.Right:
+                    g.Triangle(color,
+                        x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
+                        x + Terrain.BlockWidth / 2, y,
+                        x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight, fill: true, border: false);
+                    break;
+                default:
+                    throw new Exception("invalid direction");
+            }
+        }
         #endregion
     }
 }

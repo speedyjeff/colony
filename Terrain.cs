@@ -94,7 +94,11 @@ namespace colony
                             PheromoneDirectionType.None, // MoveEgg
                             PheromoneDirectionType.None, // MoveFood
                             PheromoneDirectionType.None, // MoveDeadAnt
-                            PheromoneDirectionType.None  // MoveQueen
+                            PheromoneDirectionType.None, // MoveQueen
+                            PheromoneDirectionType.None, // DropDirt
+                            PheromoneDirectionType.None, // DropEgg
+                            PheromoneDirectionType.None, // DropFood
+                            PheromoneDirectionType.None, // DropDeadAnt
                         };
                 }
             }
@@ -124,9 +128,10 @@ namespace colony
             // apply the intent
             switch (pheromone)
             {
+                case PheromoneType.DropDirt:
                 case PheromoneType.MoveDirt:
-                    // mark the for moving dirt or where to put waste
-                    Blocks[r][c].Pheromones[(int)PheromoneType.MoveDirt] = PheromoneDirectionType.Up;
+                    // mark an initial direction
+                    Blocks[r][c].Pheromones[(int)pheromone] = PheromoneDirectionType.Up;
                     break;
                 case PheromoneType.None:
                     // clear

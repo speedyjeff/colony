@@ -10,5 +10,16 @@ namespace colony
     {
         public float dX;
         public float dY;
+
+        public bool IsDefault()
+        {
+            return (Math.Abs(dX) + Math.Abs(dY)) == 0;
+        }
+
+        public void FlipDirection()
+        {
+            dX *= -1;
+            dY *= -1;
+        }
     }
 }

@@ -37,12 +37,13 @@ namespace colony
 
             // init
             MouseButton = engine.Common.MouseButton.None;
+            CurrentPheromone = PheromoneType.None;
             Terrain = new Terrain(width: 1000, height: 1000, columns: 10, rows: 10);
 
             // basic background
             var width = 10000;
             var height = 800;
-            var background = new Background(width, height) { GroundColor = new RGBA { R = 100, G = 100, B = 100, A = 255 }, BasePace = 0.25f };
+            var background = new Background(width, height) { GroundColor = new RGBA { R = 100, G = 100, B = 100, A = 255 }, BasePace = 0.1f };
 
             // add blocks
             var blocks = new Blocks(Terrain) { X = 0, Y = 0 };
@@ -61,6 +62,7 @@ namespace colony
             // create the HUD
             Hud = new Controls();
             Hud.AddControl(PheromoneType.MoveDirt, new RGBA() { R = 255, G = 0, B = 0, A = 255 }, "dig");
+            Hud.AddControl(PheromoneType.DropDirt, new RGBA() { R = 255, G = 0, B = 0, A = 100 }, "pile");
 
             // create the world
             World = new World(
@@ -82,6 +84,8 @@ namespace colony
             World.OnBeforeMousemove += World_OnBeforeMousemove;
             World.OnAfterMousemove += World_OnAfterMousemove;
             World.OnAfterMouseup += World_OnAfterMouseup;
+            Hud.OnSelectionChange += Hud_OnSelectionChange;
+            Hud.OnSelectionChange += blocks.SetActivePheromone;
 
             // start the UI painting
             UI = new UIHookup(this, World);
@@ -95,6 +99,12 @@ namespace colony
         private MouseButton MouseButton;
         private Controls Hud;
         private Terrain Terrain;
+        private PheromoneType CurrentPheromone;
+
+        private void Hud_OnSelectionChange(PheromoneType type)
+        {
+            CurrentPheromone = type;
+        }
 
         private bool World_OnBeforeMouseDown(Element elem, MouseButton btn, float sx, float sy, float wx, float wy, float wz, ref char key)
         {
@@ -133,10 +143,10 @@ namespace colony
             //System.Diagnostics.Debug.WriteLine($"move: {elem.GetType()} {elem.Name} {sx},{sy} {wx},{wy},{wz} {wx - (elem.X - (elem.Width / 2))},{wy - (elem.Y - (elem.Height / 2))}");
 
             // check if we have a control selected - only apply a pheromone if one is selected
-            var type = PheromoneType.None;
+            var type = CurrentPheromone;
             if (MouseButton == engine.Common.MouseButton.Left)
             {
-                if (!Hud.TryGetSelectedId(out type)) return;
+                type = CurrentPheromone;
             }
             else if (MouseButton == engine.Common.MouseButton.Right)
             {
