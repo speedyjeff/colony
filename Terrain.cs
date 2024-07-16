@@ -110,6 +110,7 @@ namespace colony
         public int Rows { get; private set; }
         public float BlockWidth { get; private set; }
         public float BlockHeight { get; private set; }
+        public float Speed { get; set; }
 
         public void ApplyPheromone(float x, float y, PheromoneType pheromone)
         {
@@ -190,18 +191,12 @@ namespace colony
             Previous.Column = c;
         }
 
-        public bool TrySetBlockDetails(float x, float y, float width, float height, BlockType block)
+        public bool TrySetBlockDetails(float x, float y, Movement move, BlockType block)
         {
-            // check the four directions (to ensure that it is open to place the block)
-            if (TrySetBlockDetails(x + width / 2, y, block)) return true;
-            if (TrySetBlockDetails(x - width / 2, y, block)) return true;
-            if (TrySetBlockDetails(x, y + height / 2, block)) return true;
-            if (TrySetBlockDetails(x, y - height / 2, block)) return true;
-            return false;
-        }
+            // adjust x,y based on movement (and Speed)
+            x += (move.dX * Speed);
+            y += (move.dY * Speed);
 
-        public bool TrySetBlockDetails(float x, float y, BlockType block)
-        {
             // todo - assumes X,Y of (0,0)
             // convert the x,y into column and row
             if (!TryCoordinatesToRowColumn(x, y, out int r, out int c)) return false;
@@ -262,8 +257,12 @@ namespace colony
             return false;
         }
 
-        public bool TryGetBlockDetails(float x, float y, out BlockType type, out PheromoneDirectionType[] pheromones)
+        public bool TryGetBlockDetails(float x, float y, Movement move, out BlockType type, out PheromoneDirectionType[] pheromones)
         {
+            // adjust x,y based on movement (and Speed)
+            x += (move.dX * Speed);
+            y += (move.dY * Speed);
+
             // convert the x,y into column and row
             if (!TryCoordinatesToRowColumn(x, y, out int r, out int c))
             {

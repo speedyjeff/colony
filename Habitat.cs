@@ -35,15 +35,16 @@ namespace colony
             // setting a double buffer eliminates the flicker
             this.DoubleBuffered = true;
 
+            // basic background
+            var width = 10000;
+            var height = 800;
+            var background = new Background(width, height) { GroundColor = new RGBA { R = 100, G = 100, B = 100, A = 255 }, BasePace = 1f };
+
             // init
             MouseButton = engine.Common.MouseButton.None;
             CurrentPheromone = PheromoneType.None;
             Terrain = new Terrain(width: 1000, height: 1000, columns: 10, rows: 10);
-
-            // basic background
-            var width = 10000;
-            var height = 800;
-            var background = new Background(width, height) { GroundColor = new RGBA { R = 100, G = 100, B = 100, A = 255 }, BasePace = 0.1f };
+            Terrain.Speed = background.BasePace * Constants.Speed;
 
             // add blocks
             var blocks = new Blocks(Terrain) { X = 0, Y = 0 };

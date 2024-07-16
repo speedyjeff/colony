@@ -72,13 +72,13 @@ namespace colony
                 else throw new Exception("must have a pheromone to follow on where to drop");
 
                 // check the current block to see if we can drop
-                if (Terrain.TryGetBlockDetails(X, Y, out BlockType block, out PheromoneDirectionType[] pheromones))
+                if (Terrain.TryGetBlockDetails(X, Y, default(Movement), out BlockType block, out PheromoneDirectionType[] pheromones))
                 {
                     // check if we are on a drop pheromone and it is open
                     if (pheromones[(int)dropPheromone] != PheromoneDirectionType.None)
                     {
                         // drop the object
-                        if (Terrain.TrySetBlockDetails(X, Y, BlockType.Dirt))
+                        if (Terrain.TrySetBlockDetails(X, Y, default(Movement), BlockType.Dirt))
                         {
                             IsHoldingObject = false;
                         }
@@ -105,13 +105,13 @@ namespace colony
                 if (!pheromoneMove.IsDefault())
                 {
                     // get the block details
-                    if (TryGetMoveableBlock(X + pheromoneMove.dX, Y + pheromoneMove.dY, out Point neighbor, out BlockType block))
+                    if (TryGetMoveableBlock(X, Y, pheromoneMove, out Point neighbor, out BlockType block))
                     {
                         // check what the block would be in our new location
                         if (block == seekingBlock)
                         {
                             // pick up the block
-                            if (Terrain.TrySetBlockDetails(neighbor.X, neighbor.Y, BlockType.Air))
+                            if (Terrain.TrySetBlockDetails(neighbor.X, neighbor.Y, pheromoneMove, BlockType.Air))
                             {
                                 IsHoldingObject = true;
 
@@ -135,8 +135,6 @@ namespace colony
             //  3. move in one of the directions
             //  4. random
 
-            //System.Diagnostics.Debug.WriteLine($"{X},{Y}");
-
             // move
             var moves = new List<Movement>();
             if (IsHoldingObject && !moveTowardsDrop.IsDefault()) moves.Add(moveTowardsDrop);
@@ -150,13 +148,10 @@ namespace colony
             foreach (var move in moves)
             {
                 // try to move
-                if (IsValidMove(X + move.dX, Y + move.dY))
+                if (IsValidMove(X, Y, move))
                 {
                     // calculate the angle
                     angle = engine.Common.Collision.CalculateAngleFromPoint(X, Y, X + move.dX, Y + move.dY);
-
-                    // debug
-                    //System.Diagnostics.Debug.WriteLine($"{X},{Y} {X + move.dX},{Y + move.dY} {angle} {move.dX},{move.dY} {IsHoldingObject} {Following} {pheromoneMove.dX},{pheromoneMove.dY} {moveTowardsDrop.dX},{moveTowardsDrop.dY}");
 
                     // done
                     xdelta = move.dX;
@@ -206,7 +201,7 @@ namespace colony
                     if (pnt.X == 0 && pnt.Y == 0) continue;
                     
                     // get the details about the block we are current on
-                    if (Terrain.TryGetBlockDetails(x + (pnt.X * multiplier), y + (pnt.Y * multiplier), out BlockType block, out PheromoneDirectionType[] pheromones))
+                    if (Terrain.TryGetBlockDetails(x + (pnt.X * multiplier), y + (pnt.Y * multiplier), default(Movement), out BlockType block, out PheromoneDirectionType[] pheromones))
                     {
                         // check the pheromone
                         if (pheromones[(int)pheromone] != PheromoneDirectionType.None)
@@ -263,7 +258,7 @@ namespace colony
             foreach (var pnt in Directions)
             {
                 // get the details about the block we are current on
-                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, out BlockType block, out PheromoneDirectionType[] pheromones))
+                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, default(Movement), out BlockType block, out PheromoneDirectionType[] pheromones))
                 {
                     // pick a direction based on the pheromone trail
                     Movement move =  PheromoneDirectionToMovement(pheromones[(int)pheromone]);
@@ -310,17 +305,17 @@ namespace colony
             return move;
         }
 
-        private bool TryGetMoveableBlock(float x, float y, out Point point, out BlockType block)
+        private bool TryGetMoveableBlock(float x, float y, Movement move, out Point neighbor, out BlockType block)
         {
             // look for a pheromone trail within the boundaries of the ant's hit box
             foreach (var pnt in Directions)
             {
                 // get the details about the block we are current on
-                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, out block, out PheromoneDirectionType[] pheromones))
+                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out block, out PheromoneDirectionType[] pheromones))
                 {
                     if (IsMoveable(block))
                     {
-                        point = new Point()
+                        neighbor = new Point()
                         {
                             X = x + pnt.X,
                             Y = y + pnt.Y
@@ -330,7 +325,8 @@ namespace colony
                 }
             }
 
-            point = default(Point);
+            // nothing
+            neighbor = default(Point);
             block = BlockType.None;
             return false;
         }
@@ -388,13 +384,13 @@ namespace colony
             return false;
         }
 
-        private bool IsValidMove(float x, float y)
+        private bool IsValidMove(float x, float y, Movement move)
         {
             // check all 4 corners
             foreach (var pnt in Directions)
             {
                 // get the block type
-                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, out BlockType block, out PheromoneDirectionType[] pheromones))
+                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out BlockType block, out PheromoneDirectionType[] pheromones))
                 {
                     // check the block type
                     if (Terrain.IsBlocking(block)) return false;
