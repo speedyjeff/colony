@@ -191,6 +191,30 @@ namespace colony
             Previous.Column = c;
         }
 
+        public void ClearPheromone(float x, float y, PheromoneType pheromone)
+        {
+            // NOTE - x,y are block relative (eg. 0,0, width, height)
+            if (x < 0 || x >= Width || y < 0 || y >= Height) throw new Exception("invalid x,y");
+
+            // translate the x,y into a row and column
+            var c = (int)(x / BlockWidth);
+            var r = (int)(y / BlockHeight);
+
+            if (c < 0 || c >= Columns || r < 0 || r >= Rows) throw new Exception("invalid index calculated");
+
+            // clear the pheromone
+            switch (pheromone)
+            {
+                case PheromoneType.DropDirt:
+                case PheromoneType.MoveDirt:
+                    // mark an initial direction
+                    Blocks[r][c].Pheromones[(int)pheromone] = PheromoneDirectionType.None;
+                    break;
+                default:
+                    throw new Exception("invalid action");
+            }
+        }
+
         public bool TrySetBlockDetails(float x, float y, Movement move, BlockType block)
         {
             // adjust x,y based on movement (and Speed)

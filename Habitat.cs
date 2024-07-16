@@ -144,22 +144,21 @@ namespace colony
             //System.Diagnostics.Debug.WriteLine($"move: {elem.GetType()} {elem.Name} {sx},{sy} {wx},{wy},{wz} {wx - (elem.X - (elem.Width / 2))},{wy - (elem.Y - (elem.Height / 2))}");
 
             // check if we have a control selected - only apply a pheromone if one is selected
-            var type = CurrentPheromone;
             if (MouseButton == engine.Common.MouseButton.Left)
             {
-                type = CurrentPheromone;
+                // pass this along to Dirt to take action
+                Terrain.ApplyPheromone(wx - (elem.X - (elem.Width / 2)), wy - (elem.Y - (elem.Height / 2)), CurrentPheromone);
             }
             else if (MouseButton == engine.Common.MouseButton.Right)
             {
-                type = PheromoneType.None;
+                Terrain.ClearPheromone(wx - (elem.X - (elem.Width / 2)), wy - (elem.Y - (elem.Height / 2)), CurrentPheromone);
             }
             else
             {
                 return;
             }
 
-            // pass this along to Dirt to take action
-            Terrain.ApplyPheromone(wx - (elem.X - (elem.Width / 2)), wy - (elem.Y - (elem.Height / 2)), type);
+            
             
             return;
         }
