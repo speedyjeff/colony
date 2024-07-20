@@ -340,18 +340,6 @@ namespace colony
         private BlockDetails[][] Blocks;
         private Coordinate Previous;
 
-        private bool IsValidMove(int r, int c)
-        {
-            // validate the input
-            if (c < 0 || c >= Columns || r < 0 || r >= Rows)
-            {
-                return false;
-            }
-
-            // check if the block is moveable
-            return !IsBlocking(Blocks[r][c].Type);
-        }
-
         private bool TryCoordinatesToRowColumn(float x, float y, out int r, out int c)
         {
             // convert the x,y into column and row
@@ -370,7 +358,6 @@ namespace colony
             c = (int)Math.Floor(fc);
             return true;
         }
-
         #endregion
     }
 }
