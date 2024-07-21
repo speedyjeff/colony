@@ -157,8 +157,6 @@ namespace colony
             {
                 return;
             }
-
-            
             
             return;
         }
