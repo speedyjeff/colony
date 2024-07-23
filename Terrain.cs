@@ -130,6 +130,7 @@ namespace colony
                 {
                     case PheromoneType.DropDirt:
                     case PheromoneType.MoveDirt:
+                    case PheromoneType.MoveQueen:
                         // mark an initial direction
                         SetBlockPheromone(r, c, pheromone, PheromoneDirectionType.Up);
                         break;
@@ -202,6 +203,7 @@ namespace colony
             {
                 case PheromoneType.DropDirt:
                 case PheromoneType.MoveDirt:
+                case PheromoneType.MoveQueen:
                     // mark an initial direction
                     SetBlockPheromone(r, c, pheromone, PheromoneDirectionType.None);
                     break;
@@ -259,35 +261,6 @@ namespace colony
                     }
                     return false;
                 }
-                /*
-                else if (block == BlockType.Egg)
-                {
-                    // if this is an Air block, change it to Egg
-                    if (Blocks[(int)r][(int)c].Type == BlockType.Air)
-                    {
-                        Blocks[(int)r][(int)c].Type = BlockType.Egg;
-                        return true;
-                    }
-                }
-                else if (block == BlockType.Food)
-                {
-                    // if this is an Air block, change it to Food
-                    if (Blocks[(int)r][(int)c].Type == BlockType.Air)
-                    {
-                        Blocks[(int)r][(int)c].Type = BlockType.Food;
-                        return true;
-                    }
-                }
-                else if (block == BlockType.DeadAnt)
-                {
-                    // if this is an Air block, change it to DeadAnt
-                    if (Blocks[(int)r][(int)c].Type == BlockType.Air)
-                    {
-                        Blocks[(int)r][(int)c].Type = BlockType.DeadAnt;
-                        return true;
-                    }
-                }
-                */
             }
 
             return false;

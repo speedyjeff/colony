@@ -54,16 +54,17 @@ namespace colony
             var players = new Player[]
             {
                 Camera,
-                new Ant(Terrain) { Name = "", X = -10, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                new Ant(Terrain) { Name = "", X = -20, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                new Ant(Terrain) { Name = "", X = -30, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                new Ant(Terrain) { Name = "", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt }
+                new Ant(Terrain) { Name = "digger1", X = -10, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
+                new Ant(Terrain) { Name = "digger2", X = -20, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
+                new Ant(Terrain) { Name = "digger3", X = -30, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
+                new Ant(Terrain) { Name = "queen", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveQueen }
             };
 
             // create the HUD
             Hud = new Controls();
             Hud.AddControl(PheromoneType.MoveDirt, new RGBA() { R = 255, G = 0, B = 0, A = 255 }, "dig");
             Hud.AddControl(PheromoneType.DropDirt, new RGBA() { R = 255, G = 0, B = 0, A = 100 }, "pile");
+            Hud.AddControl(PheromoneType.MoveQueen, new RGBA() { R = 128, G = 0, B = 128, A = 255 }, "queen");
 
             // create the world
             World = new World(

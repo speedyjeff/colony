@@ -82,12 +82,21 @@ namespace colony
                     {
                         DisplayMovePheromone(g, RedColor, pheromones[(int)PheromoneType.MoveDirt], x, y);
                     }
-                    if (ActivePheromone == PheromoneType.DropDirt)
+                    else if (ActivePheromone == PheromoneType.DropDirt)
                     {
                         DisplayDropPheromone(g, RedColor, pheromones[(int)PheromoneType.DropDirt], x, y);
                     }
+                    else if (ActivePheromone == PheromoneType.MoveQueen)
+                    {
+                        DisplayMovePheromone(g, PurpleColor, pheromones[(int)PheromoneType.MoveQueen], x, y);
+                    }
+                    else if (ActivePheromone != PheromoneType.None)
+                    {
+                        throw new Exception("invalid pheromone");
+                    }
                 }
             }
+
             // draw the rim
             g.Rectangle(PurpleColor, 0 - (Width / 2), 0 - (Height / 2), Width, Height, fill: false, border: true, thickness: 2f);
         }
@@ -102,7 +111,7 @@ namespace colony
         private RGBA[][] DirtColors;
         private RGBA[][] AirColors;
         private RGBA BrownColor = new RGBA { R = 139, G = 69, B = 19, A = 50 };
-        private RGBA PurpleColor = new RGBA { R = 128, G = 0, B = 128, A = 255 };
+        private RGBA PurpleColor = new RGBA { R = 128, G = 0, B = 128, A = 50 };
         private RGBA WhiteColor = new RGBA { R = 250, G = 250, B = 250, A = 50 };
         private RGBA RedColor = new RGBA { R = 255, G = 0, B = 0, A = 50 };
         private Terrain Terrain;

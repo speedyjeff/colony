@@ -72,23 +72,7 @@ namespace colony
             if (Cells[row][col].Directions[(int)pheromone] != PheromoneDirectionType.None)
             {
                 // use the destination paths as a guide
-                if (Cells[row][col].Directions[(int)pheromone] != PheromoneDirectionType.None) paths[(int)Cells[row][col].Directions[(int)pheromone]] = true;
-                if (row - 1 >= 0 && Cells[row - 1][col].Directions[(int)pheromone] != PheromoneDirectionType.None)
-                {
-                    if (Cells[row][col].Directions[(int)pheromone] != Cells[row - 1][col].Directions[(int)pheromone]) paths[(int)PheromoneDirectionType.Up] = true;
-                }
-                if (col + 1 < Columns && Cells[row][col + 1].Directions[(int)pheromone] != PheromoneDirectionType.None)
-                {
-                    if (Cells[row][col].Directions[(int)pheromone] != Cells[row][col + 1].Directions[(int)pheromone]) paths[(int)PheromoneDirectionType.Right] = true;
-                }
-                if (row + 1 < Rows && Cells[row + 1][col].Directions[(int)pheromone] != PheromoneDirectionType.None)
-                {
-                    if (Cells[row][col].Directions[(int)pheromone] != Cells[row + 1][col].Directions[(int)pheromone]) paths[(int)PheromoneDirectionType.Down] = true;
-                }
-                if (col - 1 >= 0 && Cells[row][col - 1].Directions[(int)pheromone] != PheromoneDirectionType.None)
-                {
-                    if (Cells[row][col].Directions[(int)pheromone] != Cells[row][col - 1].Directions[(int)pheromone]) paths[(int)PheromoneDirectionType.Left] = true;
-                }
+                paths[(int)Cells[row][col].Directions[(int)pheromone]] = true;
             }
             else
             {
