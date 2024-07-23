@@ -75,6 +75,9 @@ namespace colony
                 case PheromoneType.MoveFood:
                     color = Green;
                     break;
+                case PheromoneType.MoveEgg:
+                    color = RGBA.White;
+                    break;
                 default:
                     throw new Exception("must have a pheromone to follow");
             }
@@ -101,23 +104,23 @@ namespace colony
             // map pheromone type to what is seeking and drop pheromones
             var dropPheromone = PheromoneType.None;
             var seekingBlock = BlockType.None;
-            var replacementBlock = BlockType.None;
             switch (Following)
             {
                 case PheromoneType.MoveDirt:
                     dropPheromone = PheromoneType.DropDirt;
                     seekingBlock = BlockType.Dirt;
-                    replacementBlock = BlockType.Air;
                     break;
                 case PheromoneType.MoveQueen:
                     dropPheromone = PheromoneType.None;
                     seekingBlock = BlockType.None;
-                    replacementBlock = BlockType.None;
                     break;
                 case PheromoneType.MoveFood:
                     dropPheromone = PheromoneType.DropFood;
                     seekingBlock = BlockType.Food;
-                    replacementBlock = BlockType.Food;
+                    break;
+                case PheromoneType.MoveEgg:
+                    dropPheromone = PheromoneType.DropEgg;
+                    seekingBlock = BlockType.Egg;
                     break;
                 default:
                     throw new Exception("unknown following pheromone type");
@@ -129,14 +132,10 @@ namespace colony
                 // check the current block to see if we can drop
                 if (Terrain.TryGetBlockDetails(X, Y, default(Movement), out BlockType block, out DirectionType[] pheromones))
                 {
-                    // check if we are on a drop pheromone and it is open
-                    if (pheromones[(int)dropPheromone] != DirectionType.None)
+                    // drop the object
+                    if (Terrain.TryChangeBlockDetails(X, Y, default(Movement), dropPheromone))
                     {
-                        // drop the object
-                        if (Terrain.TrySetBlockDetails(X, Y, default(Movement), seekingBlock))
-                        {
-                            IsHoldingObject = false;
-                        }
+                        IsHoldingObject = false;
                     }
                 } // TryGetBlockDetails
             } // IsHoldingObject
@@ -149,18 +148,18 @@ namespace colony
                 move = ConvertDirectionsToMovement(directions, out moveDirection);
 
                 // get the block details
-                if (seekingBlock != BlockType.None && TryGetMoveableBlock(X, Y, move, Following, out Point neighbor, out BlockType block))
+                if (seekingBlock != BlockType.None)
                 {
-                    // check what the block would be in our new location
-                    if (block == seekingBlock)
+                    // check which corner we can pick up the block
+                    if (TryFindBlockType(X, Y, move, Following, seekingBlock, out Point neighbor))
                     {
                         // pick up the block
-                        if (Terrain.TrySetBlockDetails(neighbor.X, neighbor.Y, move, replacementBlock))
+                        if (Terrain.TryChangeBlockDetails(neighbor.X, neighbor.Y, move, Following))
                         {
                             IsHoldingObject = true;
                         }
-                    } // Following == MoveDirt
-                } // TryGetMoveableBlock
+                    } // TryGetMoveableBlock
+                } // seeking a block type
             } // !IsHoldingObject
 
             // determine a path towards the drop zone
@@ -175,7 +174,7 @@ namespace colony
             var tries = MaxMoveTries;
             do
             {
-                if (IsValidMove(X, Y, move))
+                if (Terrain.TryMove(X, Y, Width, Height, move))
                 {
                     // calculate the angle
                     angle = engine.Common.Collision.CalculateAngleFromPoint(X, Y, X + move.dX, Y + move.dY);
@@ -283,8 +282,7 @@ namespace colony
             if (!Terrain.TryCoordinatesToRowColumn(X + destination.X, Y + destination.Y, out int rowDst, out int colDst)) throw new Exception("failed to get coordinates");
 
             // check that the destination is valid
-            if (!Terrain.TryGetBlockDetails(rowDst, colDst, out BlockType block, out DirectionType[] pheromones) ||
-                Terrain.IsBlocking(block))
+            if (!Terrain.TryGetBlockDetails(rowDst, colDst, out BlockType block, out DirectionType[] pheromones) && block != BlockType.Dirt)
             {
                 throw new Exception("trying to move to an invalid block");
             }
@@ -428,15 +426,15 @@ namespace colony
             return move;
         }
 
-        private bool TryGetMoveableBlock(float x, float y, Movement move, PheromoneType pheromone, out Point neighbor, out BlockType block)
+        private bool TryFindBlockType(float x, float y, Movement move, PheromoneType pheromone, BlockType seekingBlock, out Point neighbor)
         {
             // look for a pheromone trail within the boundaries of the ant's hit box
             foreach (var pnt in Points)
             {
                 // get the details about the block we are current on
-                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out block, out DirectionType[] pheromones))
+                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out BlockType block, out DirectionType[] pheromones))
                 {
-                    if (IsMoveable(block) && pheromones[(int)pheromone] != DirectionType.None)
+                    if (block == seekingBlock && pheromones[(int)pheromone] != DirectionType.None)
                     {
                         neighbor = new Point()
                         {
@@ -450,7 +448,6 @@ namespace colony
 
             // nothing
             neighbor = default(Point);
-            block = BlockType.None;
             return false;
         }
 
@@ -536,39 +533,6 @@ namespace colony
             return true;
         }
 
-        private bool IsMoveable(BlockType block)
-        {
-            if (!IsHoldingObject && Terrain.IsMoveable(block))
-            {
-                // check that we can move it
-                if (Following == PheromoneType.MoveDirt && block == BlockType.Dirt) return true;
-                if (Following == PheromoneType.MoveFood && block == BlockType.Food) return true;
-                if (Following == PheromoneType.MoveEgg && block == BlockType.Egg) return true;
-            }
-
-            return false;
-        }
-
-        private bool IsValidMove(float x, float y, Movement move)
-        {
-            // check all 4 corners
-            foreach (var pnt in Points)
-            {
-                // get the block type
-                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out BlockType block, out DirectionType[] pheromones))
-                {
-                    // check the block type
-                    if (Terrain.IsBlocking(block)) return false;
-                }
-                else
-                {
-                    // out of bounds
-                    return false;
-                }
-            }
-
-            return true;
-        }
         #endregion
     }
 }

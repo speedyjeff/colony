@@ -41,6 +41,9 @@ namespace colony
             // add some food
             blocks[(rows / 2) - 1][columns - 1].Type = BlockType.Food;
 
+            // add an egg
+            blocks[(rows / 2) - 1][0].Type = BlockType.Egg;
+
             return blocks;
         }
     }

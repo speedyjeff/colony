@@ -57,20 +57,23 @@ namespace colony
             var players = new Player[]
             {
                 Camera,
-                //new Ant(Terrain) { Name = "digger", X = -10, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                //new Ant(Terrain) { Name = "digger", X = -20, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                //new Ant(Terrain) { Name = "digger", X = -30, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                //new Ant(Terrain) { Name = "queen", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveQueen },
+                new Ant(Terrain) { Name = "digger", X = -10, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
+                new Ant(Terrain) { Name = "digger", X = -20, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
+                new Ant(Terrain) { Name = "digger", X = -30, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
+                new Ant(Terrain) { Name = "queen", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveQueen },
                 new Ant(Terrain) { Name = "gatherer", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveFood },
+                new Ant(Terrain) { Name = "carrier", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveEgg },
             };
 
             // create the HUD
             Hud = new Controls();
             Hud.AddControl(PheromoneType.MoveDirt, new RGBA() { R = 255, G = 0, B = 0, A = 255 }, "dirt");
-            Hud.AddControl(PheromoneType.DropDirt, new RGBA() { R = 255, G = 0, B = 0, A = 100 }, "pile");
+            Hud.AddControl(PheromoneType.DropDirt, new RGBA() { R = 255, G = 0, B = 0, A = 100 }, "drop");
             Hud.AddControl(PheromoneType.MoveQueen, new RGBA() { R = 128, G = 0, B = 128, A = 255 }, "queen");
             Hud.AddControl(PheromoneType.MoveFood, new RGBA() { R = 0, G = 255, B = 0, A = 255 }, "food");
             Hud.AddControl(PheromoneType.DropFood, new RGBA() { R = 0, G = 255, B = 0, A = 100 }, "drop");
+            Hud.AddControl(PheromoneType.MoveEgg, new RGBA() { R = 255, G = 255, B = 255, A = 255 }, "egg");
+            Hud.AddControl(PheromoneType.DropEgg, new RGBA() { R = 255, G = 255, B = 255, A = 100 }, "drop");
 
             // create the world
             World = new World(

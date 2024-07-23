@@ -1,10 +1,5 @@
 ﻿using engine.Common;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace colony
 {
@@ -183,23 +178,62 @@ namespace colony
             SetBlockPheromone(r, c, pheromone, DirectionType.None);
         }
 
-        public bool TrySetBlockDetails(float x, float y, Movement move, BlockType block)
+        public bool TryChangeBlockDetails(float x, float y, Movement move, PheromoneType pheromone)
         {
             // adjust x,y based on movement (and Speed)
             x += (move.dX * Speed);
             y += (move.dY * Speed);
 
-            // todo - assumes X,Y of (0,0)
             // convert the x,y into column and row
             if (!TryCoordinatesToRowColumn(x, y, out int r, out int c)) return false;
 
+            // todo - holding the lock on ShortestPath update?
+
+            // ensure atomic operation on update
             lock (this)
             {
-                // determine what action to take
-                if (block == BlockType.Air)
+                // determine how to set based on the current block type
+                if (Blocks[r][c].Type == BlockType.Air)
                 {
-                    // if this is a Dirt block, change it to Air
-                    if (Blocks[r][c].Type == BlockType.Dirt)
+                    // check that we have a drop pheromone
+                    if (pheromone == PheromoneType.DropDirt &&
+                        Blocks[r][c].Pheromones[(int)PheromoneType.DropDirt] != DirectionType.None)
+                    {
+                        // set block details
+                        Blocks[r][c].Type = BlockType.WasteDirt;
+
+                        // remove the drop pheromone
+                        SetBlockPheromone(r, c, PheromoneType.DropDirt, DirectionType.None);
+
+                        // retain as traversable (todo?)
+                        return true;
+                    }
+                    else if (pheromone == PheromoneType.DropFood &&
+                        Blocks[r][c].Pheromones[(int)PheromoneType.DropFood] != DirectionType.None)
+                    {
+                        // set block details
+                        Blocks[r][c].Type = BlockType.Food;
+
+                        // remove the drop pheromone
+                        SetBlockPheromone(r, c, PheromoneType.DropFood, DirectionType.None);
+                        return true;
+                    }
+                    else if (pheromone == PheromoneType.DropEgg &&
+                        Blocks[r][c].Pheromones[(int)PheromoneType.DropEgg] != DirectionType.None)
+                    {
+                        // set block details
+                        Blocks[r][c].Type = BlockType.Egg;
+
+                        // remove the drop pheromone
+                        SetBlockPheromone(r, c, PheromoneType.DropEgg, DirectionType.None);
+                        return true;
+                    }
+                }
+                else if (Blocks[r][c].Type == BlockType.Dirt)
+                {
+                    // check that we can pick up this block
+                    if (pheromone == PheromoneType.MoveDirt &&
+                        Blocks[r][c].Pheromones[(int)PheromoneType.MoveDirt] != DirectionType.None)
                     {
                         // set block details
                         Blocks[r][c].Type = BlockType.Air;
@@ -216,35 +250,28 @@ namespace colony
                         return true;
                     }
                 }
-                else if (block == BlockType.Dirt)
+                else if (Blocks[r][c].Type == BlockType.Food)
                 {
-                    // if this is an Air block, change it to WasteDirt
-                    if (Blocks[r][c].Type == BlockType.Air)
+                    // check that we can pick up this block
+                    if (pheromone == PheromoneType.MoveFood &&
+                        Blocks[r][c].Pheromones[(int)PheromoneType.MoveFood] != DirectionType.None)
                     {
-                        // set block details
-                        Blocks[r][c].Type = BlockType.WasteDirt;
-
-                        // remove the drop pheromone
-                        SetBlockPheromone(r, c, PheromoneType.DropDirt, DirectionType.None);
-
-                        // retain as traversable (todo?)
+                        // do not set this block to air (food remains)
+                        // do not remove the pheromone
                         return true;
                     }
-                    return false;
                 }
-                else if (block == BlockType.Food)
+                else if (Blocks[r][c].Type == BlockType.Egg)
                 {
-                    // if this block is already food, then success
-                    if (Blocks[r][c].Type == BlockType.Food) return true;
-
-                    // check if we are placing food
-                    if (Blocks[r][c].Type == BlockType.Air)
+                    // check that we can pick up this block
+                    if (pheromone == PheromoneType.MoveEgg &&
+                        Blocks[r][c].Pheromones[(int)PheromoneType.MoveEgg] != DirectionType.None)
                     {
-                        // remove the pheromone
-                        SetBlockPheromone(r, c, PheromoneType.DropFood, DirectionType.None);
+                        // set block details
+                        Blocks[r][c].Type = BlockType.Air;
 
-                        // place the food
-                        Blocks[r][c].Type = BlockType.Food;
+                        // remove the pheromone
+                        SetBlockPheromone(r, c, PheromoneType.MoveEgg, DirectionType.None);
 
                         return true;
                     }
@@ -301,8 +328,42 @@ namespace colony
             return true;
         }
 
-        public bool TryCoordinatesToRowColumn(float x, float y, out int r, out int c)
+        public bool TryMove(float x, float y, float width, float height, Movement move)
         {
+            // adjust x,y based on movement (and Speed)
+            x += (move.dX * Speed);
+            y += (move.dY * Speed);
+
+            // check all the points are not within a blocking area
+            foreach (var pnt in new engine.Common.Point[]
+                {
+                    new Point() { X = 0, Y = 0 }, // center
+                    new Point() { X = 0 - (width / 2), Y = 0 - (height / 2) }, // top left
+                    new Point() { X = 0 + (width / 2), Y = 0 - (height / 2) }, // top right
+                    new Point() { X = 0 - (width / 2), Y = 0 + (height / 2) }, // bottom left
+                    new Point() { X = 0 + (width / 2), Y = 0 + (height / 2) }, // bottom right
+                })
+            {
+                // get the block type
+                if (TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out BlockType block, out DirectionType[] pheromones))
+                {
+                    // check the block type
+                    if (IsBlocking(block)) return false;
+                }
+                else
+                {
+                    // out of bounds
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public bool TryCoordinatesToRowColumn(float x, float y, out int r, out int c)
+        {   
+            // todo - assumes X,Y of (0,0)
+
             // convert the x,y into column and row
             var fr = ((y + (Height / 2)) / BlockHeight);
             var fc = ((x + (Width / 2)) / BlockWidth);
@@ -318,18 +379,6 @@ namespace colony
             r = (int)Math.Floor(fr);
             c = (int)Math.Floor(fc);
             return true;
-        }
-
-        public bool IsBlocking(BlockType block)
-        {
-            return (block == BlockType.Dirt);
-        }
-
-        public bool IsMoveable(BlockType block)
-        {
-            return (block == BlockType.Egg) ||
-                (block == BlockType.Dirt) ||
-                (block == BlockType.Food);
         }
 
         #region private
@@ -351,6 +400,10 @@ namespace colony
             Path.SetPheromone(r, c, pheromone, direction);
         }
 
+        private bool IsBlocking(BlockType block)
+        {
+            return (block == BlockType.Dirt);
+        }
         #endregion
     }
 }

@@ -87,6 +87,9 @@ namespace colony
                         case BlockType.Food:
                             g.Rectangle(FoodColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
                             break;
+                        case BlockType.Egg:
+                            g.Ellipse(RGBA.White, x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true);
+                            break;
                         default:
                             throw new Exception("invalid dirt state");
                     }
@@ -109,8 +112,14 @@ namespace colony
                         case PheromoneType.MoveFood:
                             DisplayMovePheromone(g, GreenColor, pheromones[(int)PheromoneType.MoveFood], x, y);
                             break;
-                            case PheromoneType.DropFood:
+                        case PheromoneType.DropFood:
                             DisplayDropPheromone(g, GreenColor, pheromones[(int)PheromoneType.DropFood], x, y);
+                            break;
+                        case PheromoneType.MoveEgg:
+                            DisplayMovePheromone(g, WhiteColor, pheromones[(int)PheromoneType.MoveEgg], x, y);
+                            break;
+                        case PheromoneType.DropEgg:
+                            DisplayDropPheromone(g, WhiteColor, pheromones[(int)PheromoneType.DropEgg], x, y);
                             break;
                         default:
                             throw new Exception("invalid pheromone");
