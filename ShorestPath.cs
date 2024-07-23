@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,10 +38,7 @@ namespace colony
             Cells[row][column].IsTraversable = (traversable ? (byte)1 : (byte)0);
 
             // update all pheromones
-            for (int pheromone = 1; pheromone < Cells[row][column].Directions.Length; pheromone++)
-            {
-                UpdateShortestPaths((PheromoneType)pheromone);
-            }
+            Update();
         }
 
         public void SetPheromone(int row, int column, PheromoneType type, DirectionType direction)
@@ -48,7 +47,7 @@ namespace colony
             Cells[row][column].Directions[(int)type] = direction;
 
             // change just this pheromone
-            UpdateShortestPaths(type);
+            Update(type);
         }
 
         public bool[] GetNextMove(int row, int col, PheromoneType pheromone)
@@ -96,8 +95,18 @@ namespace colony
             return paths;
         }
 
+        public void Update()
+        {
+            if (Cells == null || Cells[0] == null || Cells[0].Length == 0 || Cells[0][0] == null) throw new Exception("must initialize");
+            for (int pheromone = 1; pheromone < Cells[0][0].Directions.Length; pheromone++)
+            {
+                UpdateShortestPaths((PheromoneType)pheromone);
+            }
+        }
+
         public void Update(PheromoneType pheromone)
         {
+            if (Cells == null || Cells[0] == null || Cells[0].Length == 0 || Cells[0][0] == null) throw new Exception("must initialize");
             UpdateShortestPaths(pheromone);
         }
 

@@ -64,9 +64,20 @@ namespace colony
         public override void Draw(IGraphics g)
         {
             RGBA color = RGBA.Black;
-            if (Following == PheromoneType.MoveDirt) color = Red;
-            else if (Following == PheromoneType.MoveQueen) color = Purple;
-            else throw new Exception("must have a pheromone to follow");
+            switch(Following)
+            {
+                case PheromoneType.MoveDirt:
+                    color = Red;
+                    break;
+                case PheromoneType.MoveQueen:
+                    color = Purple;
+                    break;
+                case PheromoneType.MoveFood:
+                    color = Green;
+                    break;
+                default:
+                    throw new Exception("must have a pheromone to follow");
+            }
 
             g.Rectangle(color, X - (Width / 2), Y - (Height / 2), Width, Height, fill: true, border: true, thickness: 1);
 
@@ -90,15 +101,23 @@ namespace colony
             // map pheromone type to what is seeking and drop pheromones
             var dropPheromone = PheromoneType.None;
             var seekingBlock = BlockType.None;
-            switch(Following)
+            var replacementBlock = BlockType.None;
+            switch (Following)
             {
                 case PheromoneType.MoveDirt:
                     dropPheromone = PheromoneType.DropDirt;
                     seekingBlock = BlockType.Dirt;
+                    replacementBlock = BlockType.Air;
                     break;
                 case PheromoneType.MoveQueen:
                     dropPheromone = PheromoneType.None;
                     seekingBlock = BlockType.None;
+                    replacementBlock = BlockType.None;
+                    break;
+                case PheromoneType.MoveFood:
+                    dropPheromone = PheromoneType.DropFood;
+                    seekingBlock = BlockType.Food;
+                    replacementBlock = BlockType.Food;
                     break;
                 default:
                     throw new Exception("unknown following pheromone type");
@@ -114,7 +133,7 @@ namespace colony
                     if (pheromones[(int)dropPheromone] != DirectionType.None)
                     {
                         // drop the object
-                        if (Terrain.TrySetBlockDetails(X, Y, default(Movement), BlockType.Dirt))
+                        if (Terrain.TrySetBlockDetails(X, Y, default(Movement), seekingBlock))
                         {
                             IsHoldingObject = false;
                         }
@@ -136,7 +155,7 @@ namespace colony
                     if (block == seekingBlock)
                     {
                         // pick up the block
-                        if (Terrain.TrySetBlockDetails(neighbor.X, neighbor.Y, move, BlockType.Air))
+                        if (Terrain.TrySetBlockDetails(neighbor.X, neighbor.Y, move, replacementBlock))
                         {
                             IsHoldingObject = true;
                         }
@@ -204,6 +223,7 @@ namespace colony
         #region private
         private RGBA Red = new RGBA { R = 255, G = 0, B = 0, A = 255 };
         private RGBA Purple = new RGBA { R = 128, G = 0, B = 128, A = 255 };
+        private RGBA Green = new RGBA { R = 0, G = 255, B = 0, A = 255 };
         private Point[] Points;
         private DirectionType[] Directions;
         private Terrain Terrain;
@@ -521,10 +541,9 @@ namespace colony
             if (!IsHoldingObject && Terrain.IsMoveable(block))
             {
                 // check that we can move it
-                if ((Following == PheromoneType.MoveDirt && block == BlockType.Dirt))
-                {
-                    return true;
-                }
+                if (Following == PheromoneType.MoveDirt && block == BlockType.Dirt) return true;
+                if (Following == PheromoneType.MoveFood && block == BlockType.Food) return true;
+                if (Following == PheromoneType.MoveEgg && block == BlockType.Egg) return true;
             }
 
             return false;

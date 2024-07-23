@@ -40,10 +40,13 @@ namespace colony
             var height = 800;
             var background = new Background(width, height) { GroundColor = new RGBA { R = 100, G = 100, B = 100, A = 255 }, BasePace = 1f };
 
+            // initial the terrain blocks
+            var scene = TerrainGenerator.SplitInHalf(rows: 10, columns: 10);
+
             // init
             MouseButton = engine.Common.MouseButton.None;
             CurrentPheromone = PheromoneType.None;
-            Terrain = new Terrain(width: 1000, height: 1000, columns: 10, rows: 10);
+            Terrain = new Terrain(width: 1000, height: 1000, scene);
             Terrain.Speed = background.BasePace * Constants.Speed;
 
             // add blocks
@@ -54,17 +57,20 @@ namespace colony
             var players = new Player[]
             {
                 Camera,
-                new Ant(Terrain) { Name = "digger1", X = -10, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                new Ant(Terrain) { Name = "digger2", X = -20, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                new Ant(Terrain) { Name = "digger3", X = -30, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                new Ant(Terrain) { Name = "queen", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveQueen }
+                //new Ant(Terrain) { Name = "digger", X = -10, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
+                //new Ant(Terrain) { Name = "digger", X = -20, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
+                //new Ant(Terrain) { Name = "digger", X = -30, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
+                //new Ant(Terrain) { Name = "queen", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveQueen },
+                new Ant(Terrain) { Name = "gatherer", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveFood },
             };
 
             // create the HUD
             Hud = new Controls();
-            Hud.AddControl(PheromoneType.MoveDirt, new RGBA() { R = 255, G = 0, B = 0, A = 255 }, "dig");
+            Hud.AddControl(PheromoneType.MoveDirt, new RGBA() { R = 255, G = 0, B = 0, A = 255 }, "dirt");
             Hud.AddControl(PheromoneType.DropDirt, new RGBA() { R = 255, G = 0, B = 0, A = 100 }, "pile");
             Hud.AddControl(PheromoneType.MoveQueen, new RGBA() { R = 128, G = 0, B = 128, A = 255 }, "queen");
+            Hud.AddControl(PheromoneType.MoveFood, new RGBA() { R = 0, G = 255, B = 0, A = 255 }, "food");
+            Hud.AddControl(PheromoneType.DropFood, new RGBA() { R = 0, G = 255, B = 0, A = 100 }, "drop");
 
             // create the world
             World = new World(

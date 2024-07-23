@@ -44,61 +44,50 @@ namespace colony
 
     class Terrain
     {
-        public Terrain(float width, float height, int columns, int rows)
+        public Terrain(float width, float height, BlockDetails[][] blocks)
         {
+            // validate
+            if (blocks == null || blocks.Length == 0 || blocks[0].Length == 0) throw new Exception("invalid blocks");
+
             // init
             Width = width;
             Height = height;
-            Columns = columns;
-            Rows = rows;
+            Columns = blocks[0].Length;
+            Rows = blocks.Length;
             BlockWidth = Width / Columns;
             BlockHeight = Height / Rows;
             Previous = new Coordinate() { Row = 0, Column = 0 };
+            Blocks = blocks; // todo - copy?
 
             // initialize for the shortest path
             Path = new ShortestPath(Rows, Columns);
 
-            // initialize the blocks
-            Blocks = new BlockDetails[Rows][];
+            // initialize the path
             Path.NoUpdates = true;
             {
                 for (int r = 0; r < Rows; r++)
                 {
-                    Blocks[r] = new BlockDetails[Columns];
                     for (int c = 0; c < Columns; c++)
                     {
-                        // add dirt and air
-                        if (r >= Rows / 2)
-                        {
-                            // update block details
-                            Blocks[r][c].Type = BlockType.Dirt;
+                        // mark traversable
+                        Path.SetTraversable(r, c, traversable: Blocks[r][c].Type != BlockType.Dirt);
 
-                            // mark on the ShortestPath
-                            Path.SetTraversable(r, c, traversable: false);
-                        }
-                        else
+                        // apply the pheromones
+                        for(int p=1; p< Blocks[r][c].Pheromones.Length; p++)
                         {
-                            // update block details
-                            Blocks[r][c].Type = BlockType.Air;
-                        }
-                        // set to default - no pheromones
-                        Blocks[r][c].Pheromones = new DirectionType[]
+                            if (Blocks[r][c].Pheromones[p] != DirectionType.None)
                             {
-                            DirectionType.None, // None
-                            DirectionType.None, // MoveDirt
-                            DirectionType.None, // MoveEgg
-                            DirectionType.None, // MoveFood
-                            DirectionType.None, // MoveDeadAnt
-                            DirectionType.None, // MoveQueen
-                            DirectionType.None, // DropDirt
-                            DirectionType.None, // DropEgg
-                            DirectionType.None, // DropFood
-                            DirectionType.None, // DropDeadAnt
-                            };
+                                // update block details
+                                SetBlockPheromone(r, c, (PheromoneType)p, Blocks[r][c].Pheromones[p]);
+                            }
+                        }
                     }
                 }
             }
             Path.NoUpdates = false;
+
+            // update the shortest path (all at once)
+            Path.Update();
         }
 
         public float Width { get; private set; }
@@ -126,17 +115,8 @@ namespace colony
             // apply the intent
             Path.NoUpdates = true;
             {
-                switch (pheromone)
-                {
-                    case PheromoneType.DropDirt:
-                    case PheromoneType.MoveDirt:
-                    case PheromoneType.MoveQueen:
-                        // mark an initial direction
-                        SetBlockPheromone(r, c, pheromone, DirectionType.Up);
-                        break;
-                    default:
-                        throw new Exception("invalid action");
-                }
+                // mark an initial direction
+                SetBlockPheromone(r, c, pheromone, DirectionType.Up);
 
                 // set direction
                 if (Previous.Row >= 0 && Previous.Column >= 0 && Previous.Row < Rows && Previous.Column < Columns)
@@ -199,17 +179,8 @@ namespace colony
             if (c < 0 || c >= Columns || r < 0 || r >= Rows) throw new Exception("invalid index calculated");
 
             // clear the pheromone
-            switch (pheromone)
-            {
-                case PheromoneType.DropDirt:
-                case PheromoneType.MoveDirt:
-                case PheromoneType.MoveQueen:
-                    // mark an initial direction
-                    SetBlockPheromone(r, c, pheromone, DirectionType.None);
-                    break;
-                default:
-                    throw new Exception("invalid action");
-            }
+            // clear the direction
+            SetBlockPheromone(r, c, pheromone, DirectionType.None);
         }
 
         public bool TrySetBlockDetails(float x, float y, Movement move, BlockType block)
@@ -260,6 +231,23 @@ namespace colony
                         return true;
                     }
                     return false;
+                }
+                else if (block == BlockType.Food)
+                {
+                    // if this block is already food, then success
+                    if (Blocks[r][c].Type == BlockType.Food) return true;
+
+                    // check if we are placing food
+                    if (Blocks[r][c].Type == BlockType.Air)
+                    {
+                        // remove the pheromone
+                        SetBlockPheromone(r, c, PheromoneType.DropFood, DirectionType.None);
+
+                        // place the food
+                        Blocks[r][c].Type = BlockType.Food;
+
+                        return true;
+                    }
                 }
             }
 
@@ -345,11 +333,6 @@ namespace colony
         }
 
         #region private
-        struct BlockDetails
-        {
-            public BlockType Type;
-            public DirectionType[] Pheromones;
-        }
         struct Coordinate
         {
             public int Row;

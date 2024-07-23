@@ -18,11 +18,13 @@ namespace colony
             // set the dirt chunk colors
             DirtColors = new RGBA[Terrain.Rows][];
             AirColors = new RGBA[Terrain.Rows][];
+            FoodColors = new RGBA[Terrain.Rows][];
             for (int r = 0; r < Terrain.Rows; r++)
             {
                 // initialize
                 DirtColors[r] = new RGBA[Terrain.Columns];
                 AirColors[r] = new RGBA[Terrain.Columns];
+                FoodColors[r] = new RGBA[Terrain.Columns];
 
                 // set the values
                 for (int c = 0; c < Terrain.Columns; c++)
@@ -45,6 +47,15 @@ namespace colony
                         B = (byte)(WhiteColor.B + (WhiteColor.B * rand)),
                         A = 50
                     };
+                    // food
+                    rand = Utility.GetRandom(variance: 0.4f);
+                    FoodColors[r][c] = new RGBA
+                    {
+                        R = (byte)(GreenColor.R + (GreenColor.R * rand)),
+                        G = (byte)(GreenColor.G + (GreenColor.G * rand)),
+                        B = (byte)(GreenColor.B + (GreenColor.B * rand)),
+                        A = 50
+                    };
                 }
             }
         }
@@ -61,7 +72,7 @@ namespace colony
                     var y = (Y - Height / 2) + (r * Terrain.BlockHeight);
 
                     // get the block details
-                    if (!Terrain.TryGetBlockDetails(r, c, out var type, out var pheromones)) throw new Exception("invalid block details");
+                    if (!Terrain.TryGetBlockDetails(r, c, out BlockType type, out DirectionType[] pheromones)) throw new Exception("invalid block details");
 
                     // display the block
                     switch (type)
@@ -73,26 +84,36 @@ namespace colony
                         case BlockType.Dirt:
                             g.Rectangle(DirtColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
                             break;
+                        case BlockType.Food:
+                            g.Rectangle(FoodColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
+                            break;
                         default:
                             throw new Exception("invalid dirt state");
                     }
 
                     // pheromones
-                    if (ActivePheromone == PheromoneType.MoveDirt)
+                    switch(ActivePheromone)
                     {
-                        DisplayMovePheromone(g, RedColor, pheromones[(int)PheromoneType.MoveDirt], x, y);
-                    }
-                    else if (ActivePheromone == PheromoneType.DropDirt)
-                    {
-                        DisplayDropPheromone(g, RedColor, pheromones[(int)PheromoneType.DropDirt], x, y);
-                    }
-                    else if (ActivePheromone == PheromoneType.MoveQueen)
-                    {
-                        DisplayMovePheromone(g, PurpleColor, pheromones[(int)PheromoneType.MoveQueen], x, y);
-                    }
-                    else if (ActivePheromone != PheromoneType.None)
-                    {
-                        throw new Exception("invalid pheromone");
+                        case PheromoneType.None:
+                            // valid
+                            break;
+                        case PheromoneType.MoveDirt:
+                            DisplayMovePheromone(g, RedColor, pheromones[(int)PheromoneType.MoveDirt], x, y);
+                            break;
+                            case PheromoneType.DropDirt:
+                            DisplayDropPheromone(g, RedColor, pheromones[(int)PheromoneType.DropDirt], x, y);
+                            break;
+                        case PheromoneType.MoveQueen:
+                            DisplayMovePheromone(g, PurpleColor, pheromones[(int)PheromoneType.MoveQueen], x, y);
+                            break;
+                        case PheromoneType.MoveFood:
+                            DisplayMovePheromone(g, GreenColor, pheromones[(int)PheromoneType.MoveFood], x, y);
+                            break;
+                            case PheromoneType.DropFood:
+                            DisplayDropPheromone(g, GreenColor, pheromones[(int)PheromoneType.DropFood], x, y);
+                            break;
+                        default:
+                            throw new Exception("invalid pheromone");
                     }
                 }
             }
@@ -110,10 +131,12 @@ namespace colony
         #region private
         private RGBA[][] DirtColors;
         private RGBA[][] AirColors;
+        private RGBA[][] FoodColors;
         private RGBA BrownColor = new RGBA { R = 139, G = 69, B = 19, A = 50 };
         private RGBA PurpleColor = new RGBA { R = 128, G = 0, B = 128, A = 50 };
         private RGBA WhiteColor = new RGBA { R = 250, G = 250, B = 250, A = 50 };
         private RGBA RedColor = new RGBA { R = 255, G = 0, B = 0, A = 50 };
+        private RGBA GreenColor = new RGBA { R = 0, G = 255, B = 0, A = 50 };
         private Terrain Terrain;
         private PheromoneType ActivePheromone;
 
