@@ -72,7 +72,7 @@ namespace colony
                     var y = (Y - Height / 2) + (r * Terrain.BlockHeight);
 
                     // get the block details
-                    if (!Terrain.TryGetBlockDetails(r, c, out BlockType type, out DirectionType[] pheromones)) throw new Exception("invalid block details");
+                    if (!Terrain.TryGetBlockDetails(r, c, out BlockType type, out int count, out DirectionType[] pheromones)) throw new Exception("invalid block details");
 
                     // display the block
                     switch (type)
@@ -85,7 +85,10 @@ namespace colony
                             g.Rectangle(DirtColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
                             break;
                         case BlockType.Food:
-                            g.Rectangle(FoodColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
+                            // reduced as the food is eaten
+                            var w = Terrain.BlockWidth / (1 + BlockConstants.FoodFull - count);
+                            var h = Terrain.BlockHeight / (1 + BlockConstants.FoodFull - count);
+                            g.Rectangle(FoodColors[r][c], x, y, w, h, fill: true, border: false);
                             break;
                         case BlockType.Egg:
                             g.Ellipse(RGBA.White, x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true);

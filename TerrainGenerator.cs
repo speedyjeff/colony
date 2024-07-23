@@ -40,6 +40,7 @@ namespace colony
 
             // add some food
             blocks[(rows / 2) - 1][columns - 1].Type = BlockType.Food;
+            blocks[(rows / 2) - 1][columns - 1].Counter = BlockConstants.FoodFull;
 
             // add an egg
             blocks[(rows / 2) - 1][0].Type = BlockType.Egg;

@@ -213,9 +213,8 @@ namespace colony
                     {
                         // set block details
                         Blocks[r][c].Type = BlockType.Food;
+                        Blocks[r][c].Counter = 1;
 
-                        // remove the drop pheromone
-                        SetBlockPheromone(r, c, PheromoneType.DropFood, DirectionType.None);
                         return true;
                     }
                     else if (pheromone == PheromoneType.DropEgg &&
@@ -256,8 +255,37 @@ namespace colony
                     if (pheromone == PheromoneType.MoveFood &&
                         Blocks[r][c].Pheromones[(int)PheromoneType.MoveFood] != DirectionType.None)
                     {
-                        // do not set this block to air (food remains)
-                        // do not remove the pheromone
+                        // reduce the counter
+                        Blocks[r][c].Counter--;
+
+                        // remove once gone
+                        if (Blocks[r][c].Counter <= 0)
+                        {
+                            // set block details
+                            Blocks[r][c].Type = BlockType.Air;
+
+                            // remove the pheromone
+                            SetBlockPheromone(r, c, PheromoneType.MoveFood, DirectionType.None);
+                        }
+
+                        return true;
+                    }
+
+                    // check if we are dropping off food
+                    if (pheromone == PheromoneType.DropFood &&
+                        Blocks[r][c].Pheromones[(int)PheromoneType.DropFood] != DirectionType.None &&
+                        Blocks[r][c].Counter < BlockConstants.FoodFull)
+                    {
+                        // increase the counter
+                        Blocks[r][c].Counter++;
+
+                        // check if this block is now full
+                        if (Blocks[r][c].Counter >= BlockConstants.FoodFull)
+                        {
+                            // remove the pheromone
+                            SetBlockPheromone(r, c, PheromoneType.DropFood, DirectionType.None);
+                        }
+
                         return true;
                     }
                 }
@@ -281,7 +309,7 @@ namespace colony
             return false;
         }
 
-        public bool TryGetBlockDetails(float x, float y, Movement move, out BlockType type, out DirectionType[] pheromones)
+        public bool TryGetBlockDetails(float x, float y, Movement move, out BlockType type, out int count, out DirectionType[] pheromones)
         {
             // adjust x,y based on movement (and Speed)
             x += (move.dX * Speed);
@@ -292,25 +320,28 @@ namespace colony
             {
                 type = BlockType.None;
                 pheromones = null;
+                count = 0;
                 return false;
             }
 
-            return TryGetBlockDetails(r, c, out type, out pheromones);
+            return TryGetBlockDetails(r, c, out type, out count, out pheromones);
         }
 
-        public bool TryGetBlockDetails(int r, int c, out BlockType type, out DirectionType[] pheromones)
+        public bool TryGetBlockDetails(int r, int c, out BlockType type, out int count, out DirectionType[] pheromones)
         {
             // validate the input
             if (c < 0 || c >= Columns || r < 0 || r >= Rows)
             {
                 type = BlockType.None;
                 pheromones = null;
+                count = 0;
                 return false;
             }
 
             // get the details
             type = Blocks[r][c].Type;
             pheromones = Blocks[r][c].Pheromones;  // todo, do not share a reference
+            count = Blocks[r][c].Counter;
             return true;
         }
 
@@ -345,7 +376,7 @@ namespace colony
                 })
             {
                 // get the block type
-                if (TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out BlockType block, out DirectionType[] pheromones))
+                if (TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out BlockType block, out int count, out DirectionType[] pheromones))
                 {
                     // check the block type
                     if (IsBlocking(block)) return false;

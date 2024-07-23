@@ -4,6 +4,11 @@ using engine.Common;
 using engine.Common.Entities;
 using engine.Common.Entities.AI;
 
+// todo
+//  queens produce eggs
+//  food is required for queens to produce eggs
+//  ants can die and become deadAnts which can be moved
+
 namespace colony
 {
     class Ant : AI
@@ -130,7 +135,7 @@ namespace colony
             if (IsHoldingObject)
             {
                 // check the current block to see if we can drop
-                if (Terrain.TryGetBlockDetails(X, Y, default(Movement), out BlockType block, out DirectionType[] pheromones))
+                if (Terrain.TryGetBlockDetails(X, Y, default(Movement), out BlockType block, out int count, out DirectionType[] pheromones))
                 {
                     // drop the object
                     if (Terrain.TryChangeBlockDetails(X, Y, default(Movement), dropPheromone))
@@ -282,7 +287,7 @@ namespace colony
             if (!Terrain.TryCoordinatesToRowColumn(X + destination.X, Y + destination.Y, out int rowDst, out int colDst)) throw new Exception("failed to get coordinates");
 
             // check that the destination is valid
-            if (!Terrain.TryGetBlockDetails(rowDst, colDst, out BlockType block, out DirectionType[] pheromones) && block != BlockType.Dirt)
+            if (!Terrain.TryGetBlockDetails(rowDst, colDst, out BlockType block, out int count, out DirectionType[] pheromones) && block != BlockType.Dirt)
             {
                 throw new Exception("trying to move to an invalid block");
             }
@@ -432,7 +437,7 @@ namespace colony
             foreach (var pnt in Points)
             {
                 // get the details about the block we are current on
-                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out BlockType block, out DirectionType[] pheromones))
+                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out BlockType block, out int count, out DirectionType[] pheromones))
                 {
                     if (block == seekingBlock && pheromones[(int)pheromone] != DirectionType.None)
                     {
@@ -504,7 +509,7 @@ namespace colony
             // 1. pheromone trails
             BlockType block;
             DirectionType[] pheromones;
-            if (Terrain.TryGetBlockDetails(row, col, out block, out pheromones))
+            if (Terrain.TryGetBlockDetails(row, col, out block, out int count, out pheromones))
             {
                 if (pheromones[(int)PheromoneType.MoveQueen] == DirectionType.None) return false;
             }
@@ -516,7 +521,7 @@ namespace colony
             // 2. underground - look up until you find a dirt block
             for (int r = row; r >= 0; r--)
             {
-                if (Terrain.TryGetBlockDetails(r, col, out block, out pheromones) && block == BlockType.Dirt) return true;
+                if (Terrain.TryGetBlockDetails(r, col, out block, out count, out pheromones) && block == BlockType.Dirt) return true;
             }
 
             return false;
@@ -524,7 +529,7 @@ namespace colony
 
         private bool IsViableNestBlock(int row, int col, PheromoneType pheromone, DirectionType oppositeDirection)
         {
-            if (Terrain.TryGetBlockDetails(row, col, out BlockType block, out DirectionType[] pheromones))
+            if (Terrain.TryGetBlockDetails(row, col, out BlockType block, out int count, out DirectionType[] pheromones))
             {
                 if (pheromones[(int)pheromone] == DirectionType.None) { }
                 else if (pheromones[(int)pheromone] != oppositeDirection) return false;

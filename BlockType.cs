@@ -17,4 +17,11 @@ namespace colony
         WasteDirt = 6,
         WasteDeadAnt = 7
     }
+
+    static class BlockConstants
+    {
+        public const int FoodFull = 4;
+        public const int EggFull = 2;
+        public const int QueenFull = 4;
+    }
 }

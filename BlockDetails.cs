@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace colony
 {
     struct BlockDetails
     {
         public BlockType Type;
+        public int Counter;
         public DirectionType[] Pheromones;
 
         public static BlockDetails[][] Create(int rows, int columns)
@@ -20,6 +17,7 @@ namespace colony
                 for (var c = 0; c < columns; c++)
                 {
                     blocks[r][c].Type = BlockType.None;
+                    blocks[r][c].Counter = 0;
                     blocks[r][c].Pheromones = new DirectionType[]
                             {
                             DirectionType.None, // None
