@@ -42,7 +42,7 @@ namespace colony
             }
         }
 
-        public void SetPheromone(int row, int column, PheromoneType type, PheromoneDirectionType direction)
+        public void SetPheromone(int row, int column, PheromoneType type, DirectionType direction)
         {
             if (row < 0 || column < 0 || row >= Cells.Length || column >= Cells[row].Length) throw new Exception("invalid row,column");
             Cells[row][column].Directions[(int)type] = direction;
@@ -69,7 +69,7 @@ namespace colony
             if (Cells[row][col].IsTraversable == 0) return paths;
 
             // return the viable paths
-            if (Cells[row][col].Directions[(int)pheromone] != PheromoneDirectionType.None)
+            if (Cells[row][col].Directions[(int)pheromone] != DirectionType.None)
             {
                 // use the destination paths as a guide
                 paths[(int)Cells[row][col].Directions[(int)pheromone]] = true;
@@ -87,10 +87,10 @@ namespace colony
                 if (min == Int32.MaxValue) return paths;
 
                 // use the shortest path information
-                if (row - 1 >= 0) paths[(int)PheromoneDirectionType.Up] = (Cells[row - 1][col].Distances[(int)pheromone] == min);
-                if (col + 1 < Columns) paths[(int)PheromoneDirectionType.Right] = (Cells[row][col + 1].Distances[(int)pheromone] == min);
-                if (row + 1 < Rows) paths[(int)PheromoneDirectionType.Down] = (Cells[row + 1][col].Distances[(int)pheromone] == min);
-                if (col - 1 >= 0) paths[(int)PheromoneDirectionType.Left] = (Cells[row][col - 1].Distances[(int)pheromone] == min);
+                if (row - 1 >= 0) paths[(int)DirectionType.Up] = (Cells[row - 1][col].Distances[(int)pheromone] == min);
+                if (col + 1 < Columns) paths[(int)DirectionType.Right] = (Cells[row][col + 1].Distances[(int)pheromone] == min);
+                if (row + 1 < Rows) paths[(int)DirectionType.Down] = (Cells[row + 1][col].Distances[(int)pheromone] == min);
+                if (col - 1 >= 0) paths[(int)DirectionType.Left] = (Cells[row][col - 1].Distances[(int)pheromone] == min);
             }
 
             return paths;
@@ -105,7 +105,7 @@ namespace colony
         class Cell
         {
             public byte IsTraversable;
-            public PheromoneDirectionType[] Directions;
+            public DirectionType[] Directions;
             public int[] Distances;
 
             public Cell()
@@ -124,18 +124,18 @@ namespace colony
                 Int32.MaxValue, // DropFood = 9,
                 Int32.MaxValue, // DropDeadAnt = 10
                 };
-                Directions = new PheromoneDirectionType[]
+                Directions = new DirectionType[]
                 {
-                PheromoneDirectionType.None, // None = 0,
-                PheromoneDirectionType.None, // MoveDirt = 1,
-                PheromoneDirectionType.None, // MoveEgg = 3,
-                PheromoneDirectionType.None, // MoveFood = 4,
-                PheromoneDirectionType.None, // MoveDeadAnt = 5,
-                PheromoneDirectionType.None, // MoveQueen = 6,
-                PheromoneDirectionType.None, // DropDirt = 7,
-                PheromoneDirectionType.None, // DropEgg = 8,
-                PheromoneDirectionType.None, // DropFood = 9,
-                PheromoneDirectionType.None, // DropDeadAnt = 10
+                DirectionType.None, // None = 0,
+                DirectionType.None, // MoveDirt = 1,
+                DirectionType.None, // MoveEgg = 3,
+                DirectionType.None, // MoveFood = 4,
+                DirectionType.None, // MoveDeadAnt = 5,
+                DirectionType.None, // MoveQueen = 6,
+                DirectionType.None, // DropDirt = 7,
+                DirectionType.None, // DropEgg = 8,
+                DirectionType.None, // DropFood = 9,
+                DirectionType.None, // DropDeadAnt = 10
                 };
             }
         }
@@ -160,7 +160,7 @@ namespace colony
                     Cells[row][col].Distances[(int)pheromone] = Int32.MaxValue;
 
                     // check if a desired destination
-                    if (Cells[row][col].Directions[(int)pheromone] != PheromoneDirectionType.None)
+                    if (Cells[row][col].Directions[(int)pheromone] != DirectionType.None)
                     {
                         // set to the minimal distance
                         Cells[row][col].Distances[(int)pheromone] = 0;

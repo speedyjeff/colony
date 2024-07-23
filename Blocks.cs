@@ -117,40 +117,40 @@ namespace colony
         private Terrain Terrain;
         private PheromoneType ActivePheromone;
 
-        private void DisplayDropPheromone(IGraphics g, RGBA color, PheromoneDirectionType dir, float x, float y)
+        private void DisplayDropPheromone(IGraphics g, RGBA color, DirectionType dir, float x, float y)
         {
-            if (dir == PheromoneDirectionType.None) return;
+            if (dir == DirectionType.None) return;
 
             // display drop Pheromone
             g.Ellipse(color, x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight / 2, Terrain.BlockWidth / 4, Terrain.BlockHeight / 4, fill: true, border: false);
         }
 
-        private void DisplayMovePheromone(IGraphics g, RGBA color, PheromoneDirectionType dir, float x, float y)
+        private void DisplayMovePheromone(IGraphics g, RGBA color, DirectionType dir, float x, float y)
         {
-            if (dir == PheromoneDirectionType.None) return;
+            if (dir == DirectionType.None) return;
 
             // display the direction of the Pheromone
             switch (dir)
             {
-                case PheromoneDirectionType.Up:
+                case DirectionType.Up:
                     g.Triangle(color,
                         x + Terrain.BlockWidth / 2, y,
                         x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
                         x, y + Terrain.BlockHeight / 2, fill: true, border: false);
                     break;
-                case PheromoneDirectionType.Down:
+                case DirectionType.Down:
                     g.Triangle(color,
                         x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight,
                         x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
                         x, y + Terrain.BlockHeight / 2, fill: true, border: false);
                     break;
-                case PheromoneDirectionType.Left:
+                case DirectionType.Left:
                     g.Triangle(color,
                         x, y + Terrain.BlockHeight / 2,
                         x + Terrain.BlockWidth / 2, y,
                         x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight, fill: true, border: false);
                     break;
-                case PheromoneDirectionType.Right:
+                case DirectionType.Right:
                     g.Triangle(color,
                         x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
                         x + Terrain.BlockWidth / 2, y,

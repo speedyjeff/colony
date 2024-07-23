@@ -27,13 +27,13 @@ namespace colony
                     new Point() { X = 0 - (Width / 2), Y = 0 + (Height / 2) }, // bottom left
                     new Point() { X = 0 + (Width / 2), Y = 0 + (Height / 2) }, // bottom right
                 };
-            Directions = new PheromoneDirectionType[]
+            Directions = new DirectionType[]
                 {
-                    PheromoneDirectionType.None,
-                    PheromoneDirectionType.Up,
-                    PheromoneDirectionType.Down,
-                    PheromoneDirectionType.Left,
-                    PheromoneDirectionType.Right
+                    DirectionType.None,
+                    DirectionType.Up,
+                    DirectionType.Down,
+                    DirectionType.Left,
+                    DirectionType.Right
                 };
             // randomize
             for (int i=0; i < Points.Length; i++)
@@ -85,7 +85,7 @@ namespace colony
         {
             // various ways to choose movement
             Movement move = default(Movement);
-            PheromoneDirectionType moveDirection = PheromoneDirectionType.None;
+            DirectionType moveDirection = DirectionType.None;
 
             // map pheromone type to what is seeking and drop pheromones
             var dropPheromone = PheromoneType.None;
@@ -108,10 +108,10 @@ namespace colony
             if (IsHoldingObject)
             {
                 // check the current block to see if we can drop
-                if (Terrain.TryGetBlockDetails(X, Y, default(Movement), out BlockType block, out PheromoneDirectionType[] pheromones))
+                if (Terrain.TryGetBlockDetails(X, Y, default(Movement), out BlockType block, out DirectionType[] pheromones))
                 {
                     // check if we are on a drop pheromone and it is open
-                    if (pheromones[(int)dropPheromone] != PheromoneDirectionType.None)
+                    if (pheromones[(int)dropPheromone] != DirectionType.None)
                     {
                         // drop the object
                         if (Terrain.TrySetBlockDetails(X, Y, default(Movement), BlockType.Dirt))
@@ -169,7 +169,7 @@ namespace colony
                 }
 
                 // on the first failed move, try to maneuver around the block
-                if (tries == MaxMoveTries && moveDirection != PheromoneDirectionType.None)
+                if (tries == MaxMoveTries && moveDirection != DirectionType.None)
                 {
                     move = AdjustMovementAroundBlock(moveDirection);
                 }
@@ -205,7 +205,7 @@ namespace colony
         private RGBA Red = new RGBA { R = 255, G = 0, B = 0, A = 255 };
         private RGBA Purple = new RGBA { R = 128, G = 0, B = 128, A = 255 };
         private Point[] Points;
-        private PheromoneDirectionType[] Directions;
+        private DirectionType[] Directions;
         private Terrain Terrain;
         private int RandomDirectionCount;
         private Movement PreviousRandomMovement;
@@ -213,7 +213,7 @@ namespace colony
         private const int MaxRandomDirectionCount = 16;
         private const int MaxMoveTries = 5;
 
-        private Movement AdjustMovementAroundBlock(PheromoneDirectionType direction)
+        private Movement AdjustMovementAroundBlock(DirectionType direction)
         {
             // the ant tried to move and failed... depending on the direction it is trying to move, adjust to make the next move success
             //  eg. if trying to move down, check below and if we are move left we need to move more right in order to move down
@@ -223,39 +223,39 @@ namespace colony
 
             // there are always 2 directions to check
             Point corner1 = new Point();
-            PheromoneDirectionType moveD1 = PheromoneDirectionType.None;
+            DirectionType moveD1 = DirectionType.None;
             Point corner2 = new Point();
-            PheromoneDirectionType moveD2 = PheromoneDirectionType.None;
+            DirectionType moveD2 = DirectionType.None;
             Point destination = new Point();
             switch (direction)
             {
-                case PheromoneDirectionType.Up:
+                case DirectionType.Up:
                     destination = new Point() { X = 0f, Y = -1f };
                     corner1 = new Point() { X = -0.5f, Y = 0f };
-                    moveD1 = PheromoneDirectionType.Left;
+                    moveD1 = DirectionType.Left;
                     corner2 = new Point() { X = 0.5f, Y = 0f };
-                    moveD2 = PheromoneDirectionType.Right;
+                    moveD2 = DirectionType.Right;
                     break;
-                case PheromoneDirectionType.Down:
+                case DirectionType.Down:
                     destination = new Point() { X = 0f, Y = 1f };
                     corner1 = new Point() { X = -0.5f, Y = 0f };
-                    moveD1 = PheromoneDirectionType.Left;
+                    moveD1 = DirectionType.Left;
                     corner2 = new Point() { X = 0.5f, Y = 0f };
-                    moveD2 = PheromoneDirectionType.Right;
+                    moveD2 = DirectionType.Right;
                     break;
-                case PheromoneDirectionType.Left:
+                case DirectionType.Left:
                     destination = new Point() { X = -1f, Y = 0f };
                     corner1 = new Point() { X = 0f, Y = -0.5f };
-                    moveD1 = PheromoneDirectionType.Up;
+                    moveD1 = DirectionType.Up;
                     corner2 = new Point() { X = 0f, Y = 0.5f };
-                    moveD2 = PheromoneDirectionType.Down;
+                    moveD2 = DirectionType.Down;
                     break;
-                case PheromoneDirectionType.Right:
+                case DirectionType.Right:
                     destination = new Point() { X = 1f, Y = 0f };
                     corner1 = new Point() { X = 0f, Y = -0.5f };
-                    moveD1 = PheromoneDirectionType.Up;
+                    moveD1 = DirectionType.Up;
                     corner2 = new Point() { X = 0f, Y = 0.5f };
-                    moveD2 = PheromoneDirectionType.Down;
+                    moveD2 = DirectionType.Down;
                     break;
             }
 
@@ -263,7 +263,7 @@ namespace colony
             if (!Terrain.TryCoordinatesToRowColumn(X + destination.X, Y + destination.Y, out int rowDst, out int colDst)) throw new Exception("failed to get coordinates");
 
             // check that the destination is valid
-            if (!Terrain.TryGetBlockDetails(rowDst, colDst, out BlockType block, out PheromoneDirectionType[] pheromones) ||
+            if (!Terrain.TryGetBlockDetails(rowDst, colDst, out BlockType block, out DirectionType[] pheromones) ||
                 Terrain.IsBlocking(block))
             {
                 throw new Exception("trying to move to an invalid block");
@@ -295,7 +295,7 @@ namespace colony
             throw new Exception("failed to adjust movement");
         }
 
-        private Movement ConvertDirectionsToMovement(bool[] directions, out PheromoneDirectionType moveDirection)
+        private Movement ConvertDirectionsToMovement(bool[] directions, out DirectionType moveDirection)
         {
             // ShortestPath returns a bool array with PheromoneDirectionType as the indices
             for(var i=0; i<Directions.Length; i++)
@@ -324,36 +324,36 @@ namespace colony
             }
 
             // no direction determined, choose random
-            moveDirection = PheromoneDirectionType.None;
+            moveDirection = DirectionType.None;
             return GetRandomMovement();
         }
 
-        private bool IsDiagonal(PheromoneDirectionType d1, PheromoneDirectionType d2)
+        private bool IsDiagonal(DirectionType d1, DirectionType d2)
         {
-            if ((d1 == PheromoneDirectionType.Up || d1 == PheromoneDirectionType.Down) && (d2 == PheromoneDirectionType.Left || d2 == PheromoneDirectionType.Right)) return true;
-            if ((d1 == PheromoneDirectionType.Left || d1 == PheromoneDirectionType.Right) && (d2 == PheromoneDirectionType.Up || d2 == PheromoneDirectionType.Down)) return true;
+            if ((d1 == DirectionType.Up || d1 == DirectionType.Down) && (d2 == DirectionType.Left || d2 == DirectionType.Right)) return true;
+            if ((d1 == DirectionType.Left || d1 == DirectionType.Right) && (d2 == DirectionType.Up || d2 == DirectionType.Down)) return true;
             return true;
         }
 
-        private Movement PheromoneDirectionToMovement(PheromoneDirectionType direction)
+        private Movement PheromoneDirectionToMovement(DirectionType direction)
         {
             var skitter = Utility.GetRandom(variance: 0.2f);
             var move = new Movement();
             switch (direction)
             {
-                case PheromoneDirectionType.Up:
+                case DirectionType.Up:
                     move.dX = skitter;
                     move.dY = -1f + Math.Abs(skitter);
                     break;
-                case PheromoneDirectionType.Down:
+                case DirectionType.Down:
                     move.dX = skitter;
                     move.dY = 1f - Math.Abs(skitter);
                     break;
-                case PheromoneDirectionType.Left:
+                case DirectionType.Left:
                     move.dY = skitter;
                     move.dX = -1f + Math.Abs(skitter);
                     break;
-                case PheromoneDirectionType.Right:
+                case DirectionType.Right:
                     move.dY = skitter;
                     move.dX = 1f - Math.Abs(skitter);
                     break;
@@ -366,37 +366,37 @@ namespace colony
             return move;
         }
 
-        private Movement PheromoneDirectionToDiagonalMovement(PheromoneDirectionType dir1, PheromoneDirectionType dir2)
+        private Movement PheromoneDirectionToDiagonalMovement(DirectionType dir1, DirectionType dir2)
         {
             var skitter = Math.Abs(Utility.GetRandom(variance: 0.25f));
             var move = new Movement();
             switch (dir1)
             {
-                case PheromoneDirectionType.Up:
+                case DirectionType.Up:
                     move.dY = -0.5f + skitter;
                     break;
-                case PheromoneDirectionType.Down:
+                case DirectionType.Down:
                     move.dY = 0.5f - skitter;
                     break;
-                case PheromoneDirectionType.Left:
+                case DirectionType.Left:
                     move.dX = -0.5f + skitter;
                     break;
-                case PheromoneDirectionType.Right:
+                case DirectionType.Right:
                     move.dX = 0.5f - skitter;
                     break;
             }
             switch (dir2)
             {
-                case PheromoneDirectionType.Up:
+                case DirectionType.Up:
                     move.dY = -0.5f - skitter;
                     break;
-                case PheromoneDirectionType.Down:
+                case DirectionType.Down:
                     move.dY = 0.5f + skitter;
                     break;
-                case PheromoneDirectionType.Left:
+                case DirectionType.Left:
                     move.dX = -0.5f - skitter;
                     break;
-                case PheromoneDirectionType.Right:
+                case DirectionType.Right:
                     move.dX = 0.5f + skitter;
                     break;
             }
@@ -414,9 +414,9 @@ namespace colony
             foreach (var pnt in Points)
             {
                 // get the details about the block we are current on
-                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out block, out PheromoneDirectionType[] pheromones))
+                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out block, out DirectionType[] pheromones))
                 {
-                    if (IsMoveable(block) && pheromones[(int)pheromone] != PheromoneDirectionType.None)
+                    if (IsMoveable(block) && pheromones[(int)pheromone] != DirectionType.None)
                     {
                         neighbor = new Point()
                         {
@@ -486,15 +486,15 @@ namespace colony
 
             // 1. pheromone trails
             BlockType block;
-            PheromoneDirectionType[] pheromones;
+            DirectionType[] pheromones;
             if (Terrain.TryGetBlockDetails(row, col, out block, out pheromones))
             {
-                if (pheromones[(int)PheromoneType.MoveQueen] == PheromoneDirectionType.None) return false;
+                if (pheromones[(int)PheromoneType.MoveQueen] == DirectionType.None) return false;
             }
-            if (!IsViableNestBlock(row + 1, col, PheromoneType.MoveQueen, PheromoneDirectionType.Up)) return false;
-            if (!IsViableNestBlock(row - 1, col, PheromoneType.MoveQueen, PheromoneDirectionType.Down)) return false;
-            if (!IsViableNestBlock(row, col + 1, PheromoneType.MoveQueen, PheromoneDirectionType.Left)) return false;
-            if (!IsViableNestBlock(row, col - 1, PheromoneType.MoveQueen, PheromoneDirectionType.Right)) return false;
+            if (!IsViableNestBlock(row + 1, col, PheromoneType.MoveQueen, DirectionType.Up)) return false;
+            if (!IsViableNestBlock(row - 1, col, PheromoneType.MoveQueen, DirectionType.Down)) return false;
+            if (!IsViableNestBlock(row, col + 1, PheromoneType.MoveQueen, DirectionType.Left)) return false;
+            if (!IsViableNestBlock(row, col - 1, PheromoneType.MoveQueen, DirectionType.Right)) return false;
 
             // 2. underground - look up until you find a dirt block
             for (int r = row; r >= 0; r--)
@@ -505,11 +505,11 @@ namespace colony
             return false;
         }
 
-        private bool IsViableNestBlock(int row, int col, PheromoneType pheromone, PheromoneDirectionType oppositeDirection)
+        private bool IsViableNestBlock(int row, int col, PheromoneType pheromone, DirectionType oppositeDirection)
         {
-            if (Terrain.TryGetBlockDetails(row, col, out BlockType block, out PheromoneDirectionType[] pheromones))
+            if (Terrain.TryGetBlockDetails(row, col, out BlockType block, out DirectionType[] pheromones))
             {
-                if (pheromones[(int)pheromone] == PheromoneDirectionType.None) { }
+                if (pheromones[(int)pheromone] == DirectionType.None) { }
                 else if (pheromones[(int)pheromone] != oppositeDirection) return false;
             }
 
@@ -536,7 +536,7 @@ namespace colony
             foreach (var pnt in Points)
             {
                 // get the block type
-                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out BlockType block, out PheromoneDirectionType[] pheromones))
+                if (Terrain.TryGetBlockDetails(x + pnt.X, y + pnt.Y, move, out BlockType block, out DirectionType[] pheromones))
                 {
                     // check the block type
                     if (Terrain.IsBlocking(block)) return false;

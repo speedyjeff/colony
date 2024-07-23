@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace colony
 {
-    enum PheromoneDirectionType
+    enum DirectionType
     {
         None = 0,
         Up = 1,

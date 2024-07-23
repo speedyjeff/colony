@@ -82,18 +82,18 @@ namespace colony
                             Blocks[r][c].Type = BlockType.Air;
                         }
                         // set to default - no pheromones
-                        Blocks[r][c].Pheromones = new PheromoneDirectionType[]
+                        Blocks[r][c].Pheromones = new DirectionType[]
                             {
-                            PheromoneDirectionType.None, // None
-                            PheromoneDirectionType.None, // MoveDirt
-                            PheromoneDirectionType.None, // MoveEgg
-                            PheromoneDirectionType.None, // MoveFood
-                            PheromoneDirectionType.None, // MoveDeadAnt
-                            PheromoneDirectionType.None, // MoveQueen
-                            PheromoneDirectionType.None, // DropDirt
-                            PheromoneDirectionType.None, // DropEgg
-                            PheromoneDirectionType.None, // DropFood
-                            PheromoneDirectionType.None, // DropDeadAnt
+                            DirectionType.None, // None
+                            DirectionType.None, // MoveDirt
+                            DirectionType.None, // MoveEgg
+                            DirectionType.None, // MoveFood
+                            DirectionType.None, // MoveDeadAnt
+                            DirectionType.None, // MoveQueen
+                            DirectionType.None, // DropDirt
+                            DirectionType.None, // DropEgg
+                            DirectionType.None, // DropFood
+                            DirectionType.None, // DropDeadAnt
                             };
                     }
                 }
@@ -132,7 +132,7 @@ namespace colony
                     case PheromoneType.MoveDirt:
                     case PheromoneType.MoveQueen:
                         // mark an initial direction
-                        SetBlockPheromone(r, c, pheromone, PheromoneDirectionType.Up);
+                        SetBlockPheromone(r, c, pheromone, DirectionType.Up);
                         break;
                     default:
                         throw new Exception("invalid action");
@@ -143,39 +143,39 @@ namespace colony
                 {
                     // check up
                     if (Previous.Row == r - 1 && Previous.Column == c &&
-                        (Blocks[Previous.Row][Previous.Column].Pheromones[(int)pheromone]) != PheromoneDirectionType.None)
+                        (Blocks[Previous.Row][Previous.Column].Pheromones[(int)pheromone]) != DirectionType.None)
                     {
                         // the pheromones are applied moving top down, inherit
                         // set both to down
-                        SetBlockPheromone(Previous.Row, Previous.Column, pheromone, PheromoneDirectionType.Down);
-                        SetBlockPheromone(r, c, pheromone, PheromoneDirectionType.Down);
+                        SetBlockPheromone(Previous.Row, Previous.Column, pheromone, DirectionType.Down);
+                        SetBlockPheromone(r, c, pheromone, DirectionType.Down);
                     }
                     // check right
                     else if (Previous.Row == r && Previous.Column == c + 1 &&
-                        (Blocks[Previous.Row][Previous.Column].Pheromones[(int)pheromone]) != PheromoneDirectionType.None)
+                        (Blocks[Previous.Row][Previous.Column].Pheromones[(int)pheromone]) != DirectionType.None)
                     {
                         // the pheromones are applied moving right to left, inherit
                         // set both to left
-                        SetBlockPheromone(Previous.Row, Previous.Column, pheromone, PheromoneDirectionType.Left);
-                        SetBlockPheromone(r, c, pheromone, PheromoneDirectionType.Left);
+                        SetBlockPheromone(Previous.Row, Previous.Column, pheromone, DirectionType.Left);
+                        SetBlockPheromone(r, c, pheromone, DirectionType.Left);
                     }
                     // check down
                     else if (Previous.Row == r + 1 && Previous.Column == c &&
-                        (Blocks[Previous.Row][Previous.Column].Pheromones[(int)pheromone]) != PheromoneDirectionType.None)
+                        (Blocks[Previous.Row][Previous.Column].Pheromones[(int)pheromone]) != DirectionType.None)
                     {
                         // the pheromones are applied moving bottom up, inherit
                         // set both to up
-                        SetBlockPheromone(Previous.Row, Previous.Column, pheromone, PheromoneDirectionType.Up);
-                        SetBlockPheromone(r, c, pheromone, PheromoneDirectionType.Up);
+                        SetBlockPheromone(Previous.Row, Previous.Column, pheromone, DirectionType.Up);
+                        SetBlockPheromone(r, c, pheromone, DirectionType.Up);
                     }
                     // check left
                     else if (Previous.Row == r && Previous.Column == c - 1 &&
-                        (Blocks[Previous.Row][Previous.Column].Pheromones[(int)pheromone]) != PheromoneDirectionType.None)
+                        (Blocks[Previous.Row][Previous.Column].Pheromones[(int)pheromone]) != DirectionType.None)
                     {
                         // the pheromones are applied moving left to right, inherit
                         // set both to right
-                        SetBlockPheromone(Previous.Row, Previous.Column, pheromone, PheromoneDirectionType.Right);
-                        SetBlockPheromone(r, c, pheromone, PheromoneDirectionType.Right);
+                        SetBlockPheromone(Previous.Row, Previous.Column, pheromone, DirectionType.Right);
+                        SetBlockPheromone(r, c, pheromone, DirectionType.Right);
                     }
                 }
             }
@@ -205,7 +205,7 @@ namespace colony
                 case PheromoneType.MoveDirt:
                 case PheromoneType.MoveQueen:
                     // mark an initial direction
-                    SetBlockPheromone(r, c, pheromone, PheromoneDirectionType.None);
+                    SetBlockPheromone(r, c, pheromone, DirectionType.None);
                     break;
                 default:
                     throw new Exception("invalid action");
@@ -236,7 +236,7 @@ namespace colony
                         // remove the pheromone
                         Path.NoUpdates = true;
                         {
-                            SetBlockPheromone(r, c, PheromoneType.MoveDirt, PheromoneDirectionType.None);
+                            SetBlockPheromone(r, c, PheromoneType.MoveDirt, DirectionType.None);
                         }
                         Path.NoUpdates = false;
 
@@ -254,7 +254,7 @@ namespace colony
                         Blocks[r][c].Type = BlockType.WasteDirt;
 
                         // remove the drop pheromone
-                        SetBlockPheromone(r, c, PheromoneType.DropDirt, PheromoneDirectionType.None);
+                        SetBlockPheromone(r, c, PheromoneType.DropDirt, DirectionType.None);
 
                         // retain as traversable (todo?)
                         return true;
@@ -266,7 +266,7 @@ namespace colony
             return false;
         }
 
-        public bool TryGetBlockDetails(float x, float y, Movement move, out BlockType type, out PheromoneDirectionType[] pheromones)
+        public bool TryGetBlockDetails(float x, float y, Movement move, out BlockType type, out DirectionType[] pheromones)
         {
             // adjust x,y based on movement (and Speed)
             x += (move.dX * Speed);
@@ -283,7 +283,7 @@ namespace colony
             return TryGetBlockDetails(r, c, out type, out pheromones);
         }
 
-        public bool TryGetBlockDetails(int r, int c, out BlockType type, out PheromoneDirectionType[] pheromones)
+        public bool TryGetBlockDetails(int r, int c, out BlockType type, out DirectionType[] pheromones)
         {
             // validate the input
             if (c < 0 || c >= Columns || r < 0 || r >= Rows)
@@ -348,7 +348,7 @@ namespace colony
         struct BlockDetails
         {
             public BlockType Type;
-            public PheromoneDirectionType[] Pheromones;
+            public DirectionType[] Pheromones;
         }
         struct Coordinate
         {
@@ -359,7 +359,7 @@ namespace colony
         private Coordinate Previous;
         private ShortestPath Path;
 
-        private void SetBlockPheromone(int r, int c, PheromoneType pheromone, PheromoneDirectionType direction)
+        private void SetBlockPheromone(int r, int c, PheromoneType pheromone, DirectionType direction)
         {
             // set the block details
             Blocks[r][c].Pheromones[(int)pheromone] = direction;
