@@ -187,85 +187,104 @@ namespace colony
             // convert the x,y into column and row
             if (!TryCoordinatesToRowColumn(x, y, out int r, out int c)) return false;
 
+            return TryChangeBlockDetails(r, c, pheromone);
+        }
+
+        public bool TryChangeBlockDetails(int row, int col, PheromoneType pheromone)
+        {
+            // validate the input
+            if (col < 0 || col >= Columns || row < 0 || row >= Rows) return false;
+
             // todo - holding the lock on ShortestPath update?
 
             // ensure atomic operation on update
             lock (this)
-            {
+            { 
                 // determine how to set based on the current block type
-                if (Blocks[r][c].Type == BlockType.Air)
+                if (Blocks[row][col].Type == BlockType.Air)
                 {
                     // check that we have a drop pheromone
                     if (pheromone == PheromoneType.DropDirt &&
-                        Blocks[r][c].Pheromones[(int)PheromoneType.DropDirt] != DirectionType.None)
+                        Blocks[row][col].Pheromones[(int)PheromoneType.DropDirt] != DirectionType.None)
                     {
                         // set block details
-                        Blocks[r][c].Type = BlockType.WasteDirt;
+                        Blocks[row][col].Type = BlockType.WasteDirt;
 
                         // remove the drop pheromone
-                        SetBlockPheromone(r, c, PheromoneType.DropDirt, DirectionType.None);
+                        SetBlockPheromone(row, col, PheromoneType.DropDirt, DirectionType.None);
 
                         // retain as traversable (todo?)
                         return true;
                     }
                     else if (pheromone == PheromoneType.DropFood &&
-                        Blocks[r][c].Pheromones[(int)PheromoneType.DropFood] != DirectionType.None)
+                        Blocks[row][col].Pheromones[(int)PheromoneType.DropFood] != DirectionType.None)
                     {
                         // set block details
-                        Blocks[r][c].Type = BlockType.Food;
-                        Blocks[r][c].Counter = 1;
+                        Blocks[row][col].Type = BlockType.Food;
+                        Blocks[row][col].Counter = 1;
 
                         return true;
                     }
                     else if (pheromone == PheromoneType.DropEgg &&
-                        Blocks[r][c].Pheromones[(int)PheromoneType.DropEgg] != DirectionType.None)
+                        Blocks[row][col].Pheromones[(int)PheromoneType.DropEgg] != DirectionType.None)
                     {
                         // set block details
-                        Blocks[r][c].Type = BlockType.Egg;
+                        Blocks[row][col].Type = BlockType.Egg;
 
                         // remove the drop pheromone
-                        SetBlockPheromone(r, c, PheromoneType.DropEgg, DirectionType.None);
+                        SetBlockPheromone(row, col, PheromoneType.DropEgg, DirectionType.None);
+                        return true;
+                    }
+                    else if (pheromone == PheromoneType.MoveQueen)
+                    {
+                        // the Queen is laying an egg
+                        // set block details
+                        Blocks[row][col].Type = BlockType.Egg;
+
+                        // add the pheromone
+                        SetBlockPheromone(row, col, PheromoneType.MoveEgg, DirectionType.Up);
                         return true;
                     }
                 }
-                else if (Blocks[r][c].Type == BlockType.Dirt)
+                else if (Blocks[row][col].Type == BlockType.Dirt)
                 {
                     // check that we can pick up this block
                     if (pheromone == PheromoneType.MoveDirt &&
-                        Blocks[r][c].Pheromones[(int)PheromoneType.MoveDirt] != DirectionType.None)
+                        Blocks[row][col].Pheromones[(int)PheromoneType.MoveDirt] != DirectionType.None)
                     {
                         // set block details
-                        Blocks[r][c].Type = BlockType.Air;
+                        Blocks[row][col].Type = BlockType.Air;
 
                         // remove the pheromone
                         Path.NoUpdates = true;
                         {
-                            SetBlockPheromone(r, c, PheromoneType.MoveDirt, DirectionType.None);
+                            SetBlockPheromone(row, col, PheromoneType.MoveDirt, DirectionType.None);
                         }
                         Path.NoUpdates = false;
 
                         // mark the block as traversable
-                        Path.SetTraversable(r, c, traversable: true);
+                        Path.SetTraversable(row, col, traversable: true);
                         return true;
                     }
                 }
-                else if (Blocks[r][c].Type == BlockType.Food)
+                else if (Blocks[row][col].Type == BlockType.Food)
                 {
                     // check that we can pick up this block
-                    if (pheromone == PheromoneType.MoveFood &&
-                        Blocks[r][c].Pheromones[(int)PheromoneType.MoveFood] != DirectionType.None)
+                    if ((pheromone == PheromoneType.MoveFood &&
+                        Blocks[row][col].Pheromones[(int)PheromoneType.MoveFood] != DirectionType.None) ||
+                        (pheromone == PheromoneType.MoveQueen))
                     {
                         // reduce the counter
-                        Blocks[r][c].Counter--;
+                        Blocks[row][col].Counter--;
 
                         // remove once gone
-                        if (Blocks[r][c].Counter <= 0)
+                        if (Blocks[row][col].Counter <= 0)
                         {
                             // set block details
-                            Blocks[r][c].Type = BlockType.Air;
+                            Blocks[row][col].Type = BlockType.Air;
 
                             // remove the pheromone
-                            SetBlockPheromone(r, c, PheromoneType.MoveFood, DirectionType.None);
+                            SetBlockPheromone(row, col, PheromoneType.MoveFood, DirectionType.None);
                         }
 
                         return true;
@@ -273,33 +292,33 @@ namespace colony
 
                     // check if we are dropping off food
                     if (pheromone == PheromoneType.DropFood &&
-                        Blocks[r][c].Pheromones[(int)PheromoneType.DropFood] != DirectionType.None &&
-                        Blocks[r][c].Counter < BlockConstants.FoodFull)
+                        Blocks[row][col].Pheromones[(int)PheromoneType.DropFood] != DirectionType.None &&
+                        Blocks[row][col].Counter < BlockConstants.FoodFull)
                     {
                         // increase the counter
-                        Blocks[r][c].Counter++;
+                        Blocks[row][col].Counter++;
 
                         // check if this block is now full
-                        if (Blocks[r][c].Counter >= BlockConstants.FoodFull)
+                        if (Blocks[row][col].Counter >= BlockConstants.FoodFull)
                         {
                             // remove the pheromone
-                            SetBlockPheromone(r, c, PheromoneType.DropFood, DirectionType.None);
+                            SetBlockPheromone(row, col, PheromoneType.DropFood, DirectionType.None);
                         }
 
                         return true;
                     }
                 }
-                else if (Blocks[r][c].Type == BlockType.Egg)
+                else if (Blocks[row][col].Type == BlockType.Egg)
                 {
                     // check that we can pick up this block
                     if (pheromone == PheromoneType.MoveEgg &&
-                        Blocks[r][c].Pheromones[(int)PheromoneType.MoveEgg] != DirectionType.None)
+                        Blocks[row][col].Pheromones[(int)PheromoneType.MoveEgg] != DirectionType.None)
                     {
                         // set block details
-                        Blocks[r][c].Type = BlockType.Air;
+                        Blocks[row][col].Type = BlockType.Air;
 
                         // remove the pheromone
-                        SetBlockPheromone(r, c, PheromoneType.MoveEgg, DirectionType.None);
+                        SetBlockPheromone(row, col, PheromoneType.MoveEgg, DirectionType.None);
 
                         return true;
                     }

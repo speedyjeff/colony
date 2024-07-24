@@ -5,8 +5,6 @@ using engine.Common.Entities;
 using engine.Common.Entities.AI;
 
 // todo
-//  queens produce eggs
-//  food is required for queens to produce eggs
 //  ants can die and become deadAnts which can be moved
 
 namespace colony
@@ -22,6 +20,7 @@ namespace colony
             IsHoldingObject = false;
             RandomDirectionCount = 0;
             PreviousRandomMovement = new Movement();
+            FoodCounter = 0;
 
             // create the directions and randomize the order
             Points = new engine.Common.Point[]
@@ -41,13 +40,13 @@ namespace colony
                     DirectionType.Right
                 };
             // randomize
-            for (int i=0; i < Points.Length; i++)
+            for (int i = 0; i < Points.Length; i++)
             {
                 var index = i;
                 do
                 {
                     // number between 0 and Directions.Length-1
-                    index = (int)Math.Abs(Math.Floor((Utility.GetRandom(variance: Points.Length-1))));
+                    index = (int)Math.Abs(Math.Floor((Utility.GetRandom(variance: Points.Length - 1))));
                 }
                 while (index == i);
 
@@ -65,11 +64,13 @@ namespace colony
 
         public PheromoneType Following { get; set; }
         public bool IsHoldingObject { get; set; }
+        public int FoodCounter { get; private set; }
+
 
         public override void Draw(IGraphics g)
         {
             RGBA color = RGBA.Black;
-            switch(Following)
+            switch (Following)
             {
                 case PheromoneType.MoveDirt:
                     color = Red;
@@ -100,6 +101,38 @@ namespace colony
             }
         }
 
+        public override void Update()
+        {
+            if (Following == PheromoneType.MoveQueen)
+            {
+                // check if in the nest and if we can/should provide a new egg
+                if (IsInNest())
+                {
+                    // check if we have eaten enough food
+                    if (FoodCounter >= BlockConstants.QueenFull)
+                    {
+                        // check if there is an available block for an egg
+                        if (Terrain.TryCoordinatesToRowColumn(X, Y, out int row, out int col))
+                        {
+                            // todo - use the randomized list?
+
+                            // try to lay the egg in  a neighboring block
+                            if (Terrain.TryChangeBlockDetails(row + 1, col, Following) ||
+                                Terrain.TryChangeBlockDetails(row - 1, col, Following) ||
+                                Terrain.TryChangeBlockDetails(row, col + 1, Following) ||
+                                Terrain.TryChangeBlockDetails(row, col - 1, Following)) 
+                            {
+                                // reset the food counter
+                                FoodCounter = 0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // todo - death?
+        }
+
         public override ActionEnum Action(List<Element> elements, float angleToCenter, bool inZone, ref float xdelta, ref float ydelta, ref float zdelta, ref float angle)
         {
             // various ways to choose movement
@@ -117,7 +150,7 @@ namespace colony
                     break;
                 case PheromoneType.MoveQueen:
                     dropPheromone = PheromoneType.None;
-                    seekingBlock = BlockType.None;
+                    seekingBlock = BlockType.Food; // to eat
                     break;
                 case PheromoneType.MoveFood:
                     dropPheromone = PheromoneType.DropFood;
@@ -166,6 +199,18 @@ namespace colony
                     } // TryGetMoveableBlock
                 } // seeking a block type
             } // !IsHoldingObject
+
+            // check if the ant is eating
+            if (Following == PheromoneType.MoveQueen && IsHoldingObject)
+            {
+                // todo - over eating?
+
+                // eat
+                FoodCounter++;
+
+                // no longer holder the food
+                IsHoldingObject = false;
+            }
 
             // determine a path towards the drop zone
             if (IsHoldingObject)
@@ -321,7 +366,7 @@ namespace colony
         private Movement ConvertDirectionsToMovement(bool[] directions, out DirectionType moveDirection)
         {
             // ShortestPath returns a bool array with PheromoneDirectionType as the indices
-            for(var i=0; i<Directions.Length; i++)
+            for (var i = 0; i < Directions.Length; i++)
             {
                 if (!directions[(int)Directions[i]]) continue;
 
