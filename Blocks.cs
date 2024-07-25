@@ -85,12 +85,14 @@ namespace colony
                             g.Rectangle(DirtColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
                             break;
                         case BlockType.Food:
+                            g.Rectangle(AirColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
                             // reduced as the food is eaten
                             var w = Terrain.BlockWidth / (1 + BlockConstants.FoodFull - count);
                             var h = Terrain.BlockHeight / (1 + BlockConstants.FoodFull - count);
                             g.Rectangle(FoodColors[r][c], x, y, w, h, fill: true, border: false);
                             break;
                         case BlockType.Egg:
+                            g.Rectangle(AirColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
                             g.Ellipse(RGBA.White, x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true);
                             break;
                         default:

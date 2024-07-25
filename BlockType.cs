@@ -21,7 +21,8 @@ namespace colony
     static class BlockConstants
     {
         public const int FoodFull = 4;
-        public const int EggFull = 2;
         public const int QueenFull = 4;
+        public const int QueenDigest = 200;
+        public const int EggHatch = 400;
     }
 }

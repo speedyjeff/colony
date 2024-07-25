@@ -93,19 +93,14 @@ namespace colony
         public float BlockHeight { get; private set; }
         public float Speed { get; set; }
 
-        public void ApplyPheromone(float x, float y, PheromoneType pheromone)
+        public Action<float /* x */, float /* y */> OnAddEgg { get; set; }
+
+        public bool TryApplyPheromone(float x, float y, PheromoneType pheromone)
         {
-            // NOTE - x,y are block relative (eg. 0,0, width, height)
-            if (x < 0 || x >= Width || y < 0 || y >= Height) throw new Exception("invalid x,y");
-
-            // translate the x,y into a row and column
-            var c = (int)(x / BlockWidth);
-            var r = (int)(y / BlockHeight);
-
-            if (c < 0 || c >= Columns || r < 0 || r >= Rows) throw new Exception("invalid index calculated");
+            if (!TryCoordinatesToRowColumn(x, y, out int r, out int c)) return false;
 
             // exit early if this block matches the last
-            if (Previous.Row == r && Previous.Column == c) return;
+            if (Previous.Row == r && Previous.Column == c && PerviousPheromone == pheromone) return false;
 
             // apply the intent
             Path.NoUpdates = true;
@@ -160,22 +155,19 @@ namespace colony
             // set previous
             Previous.Row = r;
             Previous.Column = c;
+            PerviousPheromone = pheromone;
+
+            return true;
         }
 
-        public void ClearPheromone(float x, float y, PheromoneType pheromone)
+        public bool TryClearPheromone(float x, float y, PheromoneType pheromone)
         {
-            // NOTE - x,y are block relative (eg. 0,0, width, height)
-            if (x < 0 || x >= Width || y < 0 || y >= Height) throw new Exception("invalid x,y");
-
-            // translate the x,y into a row and column
-            var c = (int)(x / BlockWidth);
-            var r = (int)(y / BlockHeight);
-
-            if (c < 0 || c >= Columns || r < 0 || r >= Rows) throw new Exception("invalid index calculated");
+            if (!TryCoordinatesToRowColumn(x, y, out int r, out int c)) return false;
 
             // clear the pheromone
-            // clear the direction
             SetBlockPheromone(r, c, pheromone, DirectionType.None);
+
+            return true;
         }
 
         public bool TryChangeBlockDetails(float x, float y, Movement move, PheromoneType pheromone)
@@ -228,8 +220,10 @@ namespace colony
                     else if (pheromone == PheromoneType.DropEgg &&
                         Blocks[row][col].Pheromones[(int)PheromoneType.DropEgg] != DirectionType.None)
                     {
-                        // set block details
-                        Blocks[row][col].Type = BlockType.Egg;
+                        // keep the block details as air
+
+                        // request that an Ant as an Egg be added
+                        if (OnAddEgg != null) OnAddEgg((col * BlockWidth) - (Width / 2), (row * BlockHeight) - (Height / 2));
 
                         // remove the drop pheromone
                         SetBlockPheromone(row, col, PheromoneType.DropEgg, DirectionType.None);
@@ -439,6 +433,7 @@ namespace colony
         }
         private BlockDetails[][] Blocks;
         private Coordinate Previous;
+        private PheromoneType PerviousPheromone;
         private ShortestPath Path;
 
         private void SetBlockPheromone(int r, int c, PheromoneType pheromone, DirectionType direction)

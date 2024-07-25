@@ -97,6 +97,7 @@ namespace colony
             World.OnAfterMouseup += World_OnAfterMouseup;
             Hud.OnSelectionChange += Hud_OnSelectionChange;
             Hud.OnSelectionChange += blocks.SetActivePheromone;
+            Terrain.OnAddEgg += Terrain_OnAddEgg;
 
             // start the UI painting
             UI = new UIHookup(this, World);
@@ -111,6 +112,13 @@ namespace colony
         private Controls Hud;
         private Terrain Terrain;
         private PheromoneType CurrentPheromone;
+
+        private void Terrain_OnAddEgg(float x, float y)
+        {
+            // the Terrain is requesting that an Egg (eg. Ant in egg form) be added at X,Y
+            var egg = new Ant(Terrain) { X = x, Y = y, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, IsEgg = true, Following = PheromoneType.None };
+            World.AddItem(egg);
+        }
 
         private void Hud_OnSelectionChange(PheromoneType type)
         {
@@ -148,20 +156,22 @@ namespace colony
         {
             // exit early
             if (elem == null) return;
-            if (elem is not Blocks dirt) return;
+            if (elem is not Blocks) return;
 
-            // debug
-            //System.Diagnostics.Debug.WriteLine($"move: {elem.GetType()} {elem.Name} {sx},{sy} {wx},{wy},{wz} {wx - (elem.X - (elem.Width / 2))},{wy - (elem.Y - (elem.Height / 2))}");
+            // translate into x,y within Terrain
+            var tx = (wx - (elem.X - (elem.Width / 2))) - (Terrain.Width/2);
+            var ty = (wy - (elem.Y - (elem.Height / 2))) - (Terrain.Height/2);
 
             // check if we have a control selected - only apply a pheromone if one is selected
             if (MouseButton == engine.Common.MouseButton.Left)
             {
-                // pass this along to Dirt to take action
-                Terrain.ApplyPheromone(wx - (elem.X - (elem.Width / 2)), wy - (elem.Y - (elem.Height / 2)), CurrentPheromone);
+                // add pheromone
+                Terrain.TryApplyPheromone(tx, ty, CurrentPheromone);
             }
             else if (MouseButton == engine.Common.MouseButton.Right)
             {
-                Terrain.ClearPheromone(wx - (elem.X - (elem.Width / 2)), wy - (elem.Y - (elem.Height / 2)), CurrentPheromone);
+                // clear pheromone
+                Terrain.TryClearPheromone(tx, ty, CurrentPheromone);
             }
             else
             {

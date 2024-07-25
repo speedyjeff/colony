@@ -64,8 +64,9 @@ namespace colony
 
         public PheromoneType Following { get; set; }
         public bool IsHoldingObject { get; set; }
+        public bool IsEgg { get; set; }
         public int FoodCounter { get; private set; }
-
+        public float TimerCounter { get; private set; } // [0.0..1.0]
 
         public override void Draw(IGraphics g)
         {
@@ -84,32 +85,54 @@ namespace colony
                 case PheromoneType.MoveEgg:
                     color = RGBA.White;
                     break;
+                case PheromoneType.None:
+                    color = RGBA.Black;
+                    break;
                 default:
                     throw new Exception("must have a pheromone to follow");
             }
 
-            g.Rectangle(color, X - (Width / 2), Y - (Height / 2), Width, Height, fill: true, border: true, thickness: 1);
-
-            if (IsHoldingObject)
+            if (IsEgg)
             {
-                g.Ellipse(RGBA.White, X, Y, Width / 2, Height / 2, fill: true, border: true, thickness: 1);
+                // draw the egg
+                g.Ellipse(color, X, Y, Width, Height, fill: true, border: true, thickness: 1);
+            }
+            else
+            {
+                // draw the ant
+                g.Rectangle(color, X - (Width / 2), Y - (Height / 2), Width, Height, fill: true, border: true, thickness: 1);
+
+                if (IsHoldingObject)
+                {
+                    g.Ellipse(RGBA.White, X, Y, Width / 2, Height / 2, fill: true, border: true, thickness: 1);
+                }
+
+                if (Following == PheromoneType.MoveQueen && IsInNest())
+                {
+                    g.Text(RGBA.White, X, Y, "Nest", fontsize: 12f);
+                }
             }
 
-            if (Following == PheromoneType.MoveQueen && IsInNest())
+            // progress bar
+            if (TimerCounter > 0 && TimerCounter <= 1f)
             {
-                g.Text(RGBA.White, X, Y, "Nest", fontsize: 12f);
+                // bar fill
+                g.Rectangle(RGBA.White, X + (Width / 2), Y + (Height / 2), (Width / 2) * (TimerCounter <= 1f ? TimerCounter : 1f), Height / 4, fill: true, border: false);
+                // border
+                g.Rectangle(RGBA.Black, X + (Width / 2), Y + (Height / 2), (Width / 2), (Height / 4), fill: false, border: true);
             }
         }
 
         public override void Update()
         {
+            // Queen laying Eggs
             if (Following == PheromoneType.MoveQueen)
             {
                 // check if in the nest and if we can/should provide a new egg
                 if (IsInNest())
                 {
                     // check if we have eaten enough food
-                    if (FoodCounter >= BlockConstants.QueenFull)
+                    if (FoodCounter >= BlockConstants.QueenFull && TimerCounter >= 1f)
                     {
                         // check if there is an available block for an egg
                         if (Terrain.TryCoordinatesToRowColumn(X, Y, out int row, out int col))
@@ -128,6 +151,80 @@ namespace colony
                         }
                     }
                 }
+            }
+
+            // Queen eating and digesting
+            if (Following == PheromoneType.MoveQueen)
+            {
+                // check if we are ready to eat
+                if (FoodCounter == 0) TimerCounter = 1.1f;
+
+                // check if eating
+                if (IsHoldingObject)
+                {
+                    // eat
+                    FoodCounter++;
+
+                    // no longer holder the food
+                    IsHoldingObject = false;
+
+                    // reset digestion
+                    TimerCounter = 0f;
+                }
+
+                // digesting the food
+                TimerCounter += (1f / (float)BlockConstants.QueenDigest);
+            }
+
+            // Egg choosing what to follow
+            if (IsEgg)
+            {
+                // increment the hatch timer
+                TimerCounter += (1f / (float)BlockConstants.EggHatch);
+
+                // if no pheromone assigned, choose one randomly
+                if (Following == PheromoneType.None)
+                {
+                    // choose a random pheromone
+                    var pheromone = (int)Math.Abs(Math.Floor(Utility.GetRandom(variance: 3)));
+                    switch (pheromone)
+                    {
+                        case 0:
+                            Following = PheromoneType.MoveDirt;
+                            break;
+                        case 1:
+                            Following = PheromoneType.MoveFood;
+                            break;
+                        case 2:
+                            Following = PheromoneType.MoveEgg;
+                            break;
+                    }
+                }
+
+                // choose what type of pheromone to follow based on pheromones on this block
+                if (Terrain.TryGetBlockDetails(X, Y, default(Movement), out BlockType block, out int count, out DirectionType[] pheromones))
+                {
+                    // choose a pheromone and assign to the Egg
+                    var setPheromone = PheromoneType.None;
+                    if (pheromones[(int)PheromoneType.MoveDirt] != DirectionType.None) setPheromone = PheromoneType.MoveDirt;
+                    else if (pheromones[(int)PheromoneType.MoveEgg] != DirectionType.None) setPheromone = PheromoneType.MoveEgg;
+                    else if (pheromones[(int)PheromoneType.MoveFood] != DirectionType.None) setPheromone = PheromoneType.MoveFood;
+
+                    // set the pheromone to follow and remove the pheromone
+                    if (setPheromone != PheromoneType.None)
+                    {
+                        Following = setPheromone;
+                        Terrain.TryClearPheromone(X, Y, setPheromone);
+                    }
+                }
+            }
+
+            // Eggs hatching
+            if (IsEgg && TimerCounter >= 1f)
+            {
+                // hatch the egg
+                IsEgg = false;
+                TimerCounter = 0;
             }
 
             // todo - death?
@@ -150,7 +247,9 @@ namespace colony
                     break;
                 case PheromoneType.MoveQueen:
                     dropPheromone = PheromoneType.None;
-                    seekingBlock = BlockType.Food; // to eat
+                    // check if ready to eat
+                    if (TimerCounter >= 1f && FoodCounter < BlockConstants.QueenFull) seekingBlock = BlockType.Food; // to eat
+                    else seekingBlock = BlockType.None; // in the process of eating (eg. mouth is full)
                     break;
                 case PheromoneType.MoveFood:
                     dropPheromone = PheromoneType.DropFood;
@@ -159,6 +258,10 @@ namespace colony
                 case PheromoneType.MoveEgg:
                     dropPheromone = PheromoneType.DropEgg;
                     seekingBlock = BlockType.Egg;
+                    break;
+                case PheromoneType.None:
+                    dropPheromone = PheromoneType.None;
+                    seekingBlock = BlockType.None;
                     break;
                 default:
                     throw new Exception("unknown following pheromone type");
@@ -200,24 +303,23 @@ namespace colony
                 } // seeking a block type
             } // !IsHoldingObject
 
-            // check if the ant is eating
-            if (Following == PheromoneType.MoveQueen && IsHoldingObject)
-            {
-                // todo - over eating?
-
-                // eat
-                FoodCounter++;
-
-                // no longer holder the food
-                IsHoldingObject = false;
-            }
-
             // determine a path towards the drop zone
             if (IsHoldingObject)
             {
                 // grab the best direction towards a drop zone
                 if (!Terrain.TryGetBestMove(X, Y, dropPheromone, out bool[] directions)) throw new Exception("failed to get best move directions");
                 move = ConvertDirectionsToMovement(directions, out moveDirection);
+            }
+
+            // eggs do not move
+            if (IsEgg)
+            {
+                // no move
+                xdelta = 0f;
+                ydelta = 0f;
+                zdelta = 0f;
+                angle = 0f;
+                return ActionEnum.None;
             }
 
             // move
