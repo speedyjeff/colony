@@ -39,12 +39,27 @@ namespace colony
             }
 
             // add some food
-            blocks[(rows / 2) - 1][columns - 1].Type = BlockType.Food;
-            blocks[(rows / 2) - 1][columns - 1].Counter = BlockConstants.FoodFull;
-            blocks[(rows / 2) - 2][columns - 1].Type = BlockType.Food;
-            blocks[(rows / 2) - 2][columns - 1].Counter = BlockConstants.FoodFull;
+            blocks[(rows / 2) - 1][columns - 2].Type = BlockType.Food;
+            blocks[(rows / 2) - 1][columns - 2].Counter = BlockConstants.FoodFull;
+            blocks[(rows / 2) - 2][columns - 2].Type = BlockType.Food;
+            blocks[(rows / 2) - 2][columns - 2].Counter = BlockConstants.FoodFull;
+
+            // debug egg
+            blocks[(rows / 2) - 1][0].Type = BlockType.Egg;
 
             return blocks;
+        }
+
+        public static BlockDetails[][] Demo()
+        {
+            // return a demo terrain that highlights the capabilities of the system
+            return null;
+        }
+
+        public static BlockDetails[][] DemoRound()
+        {
+            // todo
+            return null;
         }
     }
 }

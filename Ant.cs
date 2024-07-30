@@ -6,6 +6,7 @@ using engine.Common.Entities.AI;
 
 // todo
 //  ants can die and become deadAnts which can be moved
+//  save & load - build demos
 
 namespace colony
 {
@@ -21,6 +22,7 @@ namespace colony
             RandomDirectionCount = 0;
             PreviousRandomMovement = new Movement();
             FoodCounter = 0;
+            Age = (int)Math.Abs(Utility.GetRandom(1f) * BlockConstants.AntAdultAge);
 
             // create the directions and randomize the order
             Points = new engine.Common.Point[]
@@ -67,9 +69,11 @@ namespace colony
         public bool IsEgg { get; set; }
         public int FoodCounter { get; private set; }
         public float TimerCounter { get; private set; } // [0.0..1.0]
+        public int Age { get; private set; }
 
         public override void Draw(IGraphics g)
         {
+            // get the color for the Ant
             RGBA color = RGBA.Black;
             switch (Following)
             {
@@ -94,22 +98,52 @@ namespace colony
 
             if (IsEgg)
             {
-                // draw the egg
-                g.Ellipse(color, X, Y, Width, Height, fill: true, border: true, thickness: 1);
+                // note - same code is in Terrain.Draw
+                var x = X - (Width / 2);
+                var y = Y - (Height / 2);
+                var eggWidth = Terrain.BlockWidth / 2;
+                var eggHeight = Terrain.BlockHeight / 2;
+                // series of small ellipses in the shape of a 3 segment egg
+                g.Ellipse(color, x + (eggWidth / 2), y + (eggHeight / 4), (eggWidth / 2), (eggHeight / 3), fill: true, border: true);
+                g.Ellipse(color, x + (eggWidth / 4), y + (eggHeight / 3), (eggWidth / 2), (eggHeight / 3), fill: true, border: true);
+                g.Ellipse(color, x, y + (eggHeight / 4), (eggWidth / 2), (eggHeight / 3), fill: true, border: true);
             }
             else
             {
-                // draw the ant
-                g.Rectangle(color, X - (Width / 2), Y - (Height / 2), Width, Height, fill: true, border: true, thickness: 1);
+                // create the ant image
+                if (AntImage == null) CreateAntImage(g, color);
 
-                if (IsHoldingObject)
-                {
-                    g.Ellipse(RGBA.White, X, Y, Width / 2, Height / 2, fill: true, border: true, thickness: 1);
-                }
-
+                // display that the Queen Ant is in the nest and can lay eggs
                 if (Following == PheromoneType.MoveQueen && IsInNest())
                 {
-                    g.Text(RGBA.White, X, Y, "Nest", fontsize: 12f);
+                    g.Ellipse(PaleYellow, X - (Width / 2), Y - (Height / 2), Math.Max(Width, Height), Math.Max(Width, Height), fill: true, border: false);
+                }
+
+                // scale width and height based on age (scale by 0.5f and 1f)
+                var antWidth = (Width * 0.5f) + (Width * (0.5f * ((float)Age / (float)BlockConstants.AntAdultAge)));
+                var antHeight = (Height * 0.5f) + (Height * (0.5f * ((float)Age / (float)BlockConstants.AntAdultAge)));
+
+                // draw the ant (using 3 points of the parallelogram)
+                RotateAntBoundingBox(antWidth, antHeight);
+                g.Image(AntImage, AntBoundingBox);
+
+                // draw what the ant is holding
+                if (IsHoldingObject)
+                {
+                    if (Following == PheromoneType.MoveDirt)
+                    {
+                        // draw a small rectangle
+                        g.Rectangle(Brown, X-(antWidth/2), Y-(antWidth/2), antWidth / 4, antHeight / 4, fill: true, border: true, thickness: 1);
+                    }
+                    else if (Following == PheromoneType.MoveEgg || Following == PheromoneType.MoveFood)
+                    {
+                        // draw a small ellipse
+                        g.Ellipse(color, X-(antWidth/2), Y-(antWidth/2), antWidth / 4, antHeight / 4, fill: true, border: true, thickness: 1);
+                    }
+                    else if (Following == PheromoneType.MoveQueen)
+                    {
+                        // nothing, it will be done eating soon
+                    }
                 }
             }
 
@@ -117,14 +151,17 @@ namespace colony
             if (TimerCounter > 0 && TimerCounter <= 1f)
             {
                 // bar fill
-                g.Rectangle(RGBA.White, X + (Width / 2), Y + (Height / 2), (Width / 2) * (TimerCounter <= 1f ? TimerCounter : 1f), Height / 4, fill: true, border: false);
+                g.Rectangle(Yellow, X - (Width / 2), Y + (Height * 0.8f), Width * (TimerCounter <= 1f ? TimerCounter : 1f), Height / 8, fill: true, border: false);
                 // border
-                g.Rectangle(RGBA.Black, X + (Width / 2), Y + (Height / 2), (Width / 2), (Height / 4), fill: false, border: true);
+                g.Rectangle(RGBA.Black, X - (Width / 2), Y + (Height * 0.8f), Width, Height / 8, fill: false, border: true, thickness: 1f);
             }
         }
 
         public override void Update()
         {
+            // update age
+            if (Age < BlockConstants.AntAdultAge) Age++;
+
             // Queen laying Eggs
             if (Following == PheromoneType.MoveQueen)
             {
@@ -186,19 +223,10 @@ namespace colony
                 if (Following == PheromoneType.None)
                 {
                     // choose a random pheromone
-                    var pheromone = (int)Math.Abs(Math.Floor(Utility.GetRandom(variance: 3)));
-                    switch (pheromone)
-                    {
-                        case 0:
-                            Following = PheromoneType.MoveDirt;
-                            break;
-                        case 1:
-                            Following = PheromoneType.MoveFood;
-                            break;
-                        case 2:
-                            Following = PheromoneType.MoveEgg;
-                            break;
-                    }
+                    var rand = (int)Math.Abs(Math.Floor(Utility.GetRandom(variance: 10)));
+                    if (rand >= 0 && rand < 6) Following = PheromoneType.MoveDirt;
+                    else if (rand >= 6 && rand < 8) Following = PheromoneType.MoveEgg;
+                    else Following = PheromoneType.MoveFood;
                 }
 
                 // choose what type of pheromone to follow based on pheromones on this block
@@ -225,6 +253,7 @@ namespace colony
                 // hatch the egg
                 IsEgg = false;
                 TimerCounter = 0;
+                Age = 0;
             }
 
             // todo - death?
@@ -372,17 +401,133 @@ namespace colony
         }
 
         #region private
-        private RGBA Red = new RGBA { R = 255, G = 0, B = 0, A = 255 };
-        private RGBA Purple = new RGBA { R = 128, G = 0, B = 128, A = 255 };
-        private RGBA Green = new RGBA { R = 0, G = 255, B = 0, A = 255 };
+        private static RGBA Red = new RGBA { R = 255, G = 0, B = 0, A = 255 };
+        private static RGBA Purple = new RGBA { R = 128, G = 0, B = 128, A = 255 };
+        private static RGBA Green = new RGBA { R = 0, G = 255, B = 0, A = 255 };
+        private static RGBA Brown = new RGBA { R = 139, G = 69, B = 19, A = 255 };
+        private static RGBA Yellow = new RGBA { R = 255, G = 255, B = 0, A = 255 };
+        private static RGBA PaleYellow = new RGBA { R = 255, G = 255, B = 0, A = 100 };
+        private static RGBA Transparent = new RGBA { R = 1, G = 2, B = 3, A = 255 };
         private Point[] Points;
         private DirectionType[] Directions;
         private Terrain Terrain;
         private int RandomDirectionCount;
         private Movement PreviousRandomMovement;
+        private IImage AntImage;
+        private Point[] AntBoundingBox;
 
         private const int MaxRandomDirectionCount = 16;
         private const int MaxMoveTries = 5;
+
+        private void CreateAntImage(IGraphics g, RGBA color)
+        {
+            if (AntImage != null) throw new Exception("must be called only once");
+
+            // top is forward (eg. Angle 0 is facing up)
+
+            // create the Ant image
+            AntImage = g.CreateImage((int)Width, (int)Height);
+            AntImage.Graphics.Clear(Transparent);
+
+            // draw the Ant
+            var thickness = 1f;
+
+            // head
+            var headWidth = Width / 2f;
+            var headHeight = Height / 6f;
+            
+            // first segment
+            var bodyWidth = Width * 0.5f;
+            var bodyHeight = Height / 3f;
+            var bodyYOffset = headHeight / 4f;
+
+            // second segment
+            var segmentWidth = Width * 0.7f;
+            var segmentHeight = Height / 4f;
+            var segmentYOffset = bodyHeight / 4f;
+
+            // their segment
+            var thirdWidth = Width;
+            var thirdHeight = Height / 4f;
+            var thirdYOffset = segmentHeight / 2f;
+
+            // legs
+            var legLength = Width / 2f;
+            var antennaLength = Height / 4f;
+            var legThickness = 2f;
+
+            // wings
+            var wingWidth = Width / 4f;
+            var wingHeight = Height / 2f;
+
+            // center
+            var x = Width / 2f;
+            var y = Height / 2f;
+
+            // Draw ant head (ellipse)
+            AntImage.Graphics.Ellipse(color, x - (headWidth / 2), y - (Height / 2), headWidth, headHeight, fill: true, border: true, thickness);
+
+            // Draw ant body segments (three ellipses)
+            AntImage.Graphics.Ellipse(color, x - bodyWidth / 2, y - Height / 2 + headHeight + bodyYOffset, bodyWidth, bodyHeight, fill: true, border: true, thickness);
+            AntImage.Graphics.Ellipse(color, x - segmentWidth / 2, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset, segmentWidth, segmentHeight, fill: true, border: true, thickness);
+
+            // Draw ant legs (lines)
+            // Top segment legs
+            AntImage.Graphics.Line(color, x - bodyWidth / 2, y - Height / 2 + headHeight + bodyYOffset, x - bodyWidth / 2 - legLength, y - Height / 2 + headHeight + bodyYOffset - legLength / 2, legThickness);
+            AntImage.Graphics.Line(color, x + bodyWidth / 2, y - Height / 2 + headHeight + bodyYOffset, x + bodyWidth / 2 + legLength, y - Height / 2 + headHeight + bodyYOffset - legLength / 2, legThickness);
+
+            // Middle segment legs
+            AntImage.Graphics.Line(color, x - segmentWidth / 2, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset, x - segmentWidth / 2 - legLength, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset - legLength / 2, legThickness);
+            AntImage.Graphics.Line(color, x + segmentWidth / 2, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset, x + segmentWidth / 2 + legLength, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset - legLength / 2, legThickness);
+
+            // Bottom segment legs
+            AntImage.Graphics.Line(color, x - thirdWidth / 2, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset + segmentHeight + thirdYOffset, x - thirdWidth / 2 - legLength, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset + segmentHeight + thirdYOffset - legLength / 2, legThickness);
+            AntImage.Graphics.Line(color, x + thirdWidth / 2, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset + segmentHeight + thirdYOffset, x + thirdWidth / 2 + legLength, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset + segmentHeight + thirdYOffset - legLength / 2, legThickness);
+
+            if (Following == PheromoneType.MoveQueen)
+            {
+                // Draw wings (ellipses)
+                AntImage.Graphics.Ellipse(RGBA.White, x - (bodyWidth / 2) - (wingWidth / 2), y + headHeight + bodyYOffset - (wingHeight / 2), wingWidth, wingHeight, fill: true, border: false);
+                AntImage.Graphics.Ellipse(RGBA.White, x + (bodyWidth / 2) - (wingWidth / 2), y + headHeight + bodyYOffset - (wingHeight / 2), wingWidth, wingHeight, fill: true, border: false);
+            }
+
+            // Draw ant antennae (lines)
+            AntImage.Graphics.Line(color, x - headWidth / 4, y - Height / 2, x - headWidth / 4 - antennaLength, y - Height / 2 - antennaLength, legThickness);
+            AntImage.Graphics.Line(color, x + headWidth / 4, y - Height / 2, x + headWidth / 4 + antennaLength, y - Height / 2 - antennaLength, legThickness);
+
+            // remove the background
+            AntImage.MakeTransparent(Transparent);
+        }
+
+        private void RotateAntBoundingBox(float width, float height)
+        {
+            if (AntBoundingBox == null) AntBoundingBox = new engine.Common.Point[3];
+
+            // calculate the four corners of the bounding box before rotation
+
+            // upper-left
+            AntBoundingBox[0] = new Point() { X = X - width / 2, Y = Y - height / 2 };
+            // upper-right
+            AntBoundingBox[1] = new Point() { X = X + width / 2, Y = Y - height / 2 };
+            // lower-left
+            AntBoundingBox[2] = new Point() { X = X - width / 2, Y = Y + height / 2 };
+
+            // convert angle from degrees to radians
+            var rads = (float)(Angle * (Math.PI / 180));
+
+            // rotate each point around {X,Y}
+            for (var i = 0; i < AntBoundingBox.Length; i++)
+            {
+                var cosTheta = (float)Math.Cos(rads);
+                var sinTheta = (float)Math.Sin(rads);
+
+                var dx = AntBoundingBox[i].X - X;
+                var dy = AntBoundingBox[i].Y - Y;
+
+                AntBoundingBox[i].X = (cosTheta * dx) - (sinTheta * dy) + X;
+                AntBoundingBox[i].Y = (sinTheta * dx) + (cosTheta * dy) + Y;
+            }
+        }
 
         private Movement AdjustMovementAroundBlock(DirectionType direction)
         {

@@ -85,15 +85,46 @@ namespace colony
                             g.Rectangle(DirtColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
                             break;
                         case BlockType.Food:
+                            // note - this is based on FoodFull being 4
+                            if (BlockConstants.FoodFull != 4) throw new Exception("invalid food full");
+                            // background
                             g.Rectangle(AirColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
-                            // reduced as the food is eaten
-                            var w = Terrain.BlockWidth / (1 + BlockConstants.FoodFull - count);
-                            var h = Terrain.BlockHeight / (1 + BlockConstants.FoodFull - count);
-                            g.Rectangle(FoodColors[r][c], x, y, w, h, fill: true, border: false);
+                            // stem - the shape of a small x
+                            g.Line(DirtColors[r][c], x + (Terrain.BlockWidth / 4), y + (Terrain.BlockHeight / 4), x + ((3 * Terrain.BlockWidth) / 4), y + ((3 * Terrain.BlockHeight) / 4), thickness: 2f);
+                            g.Line(DirtColors[r][c], x + ((3 * Terrain.BlockWidth) / 4), y + (Terrain.BlockHeight / 4), x + (Terrain.BlockWidth / 4), y + ((3 * Terrain.BlockHeight) / 4), thickness: 2f);
+                            // 4 fruit
+                            var fcolor = FoodColors[r][c];
+                            if (count >= 1)
+                            {
+                                if (c - 1 > 0) fcolor = FoodColors[r][c - 1];
+                                g.Ellipse(fcolor, x + (Terrain.BlockWidth / 8), y, (Terrain.BlockWidth / 2), (Terrain.BlockHeight / 2), fill: true, border: false);
+                            }
+                            if (count >= 2)
+                            {
+                                if (r - 1 > 0) fcolor = FoodColors[r - 1][c];
+                                g.Ellipse(fcolor, x + (Terrain.BlockWidth / 8), y + (Terrain.BlockHeight / 2), (Terrain.BlockWidth / 2), Terrain.BlockHeight / 2, fill: true, border: false);
+                            }
+                            if (count >= 3)
+                            {
+                                if (c + 1 < Terrain.Columns) fcolor = FoodColors[r][c + 1];
+                                g.Ellipse(fcolor, x + (Terrain.BlockWidth / 2), y + (Terrain.BlockHeight / 10), (Terrain.BlockWidth / 2), (Terrain.BlockHeight / 2), fill: true, border: false);
+                            }
+                            if (count >= 4)
+                            {
+                                if (r + 1 < Terrain.Rows) fcolor = FoodColors[r + 1][c];
+                                g.Ellipse(fcolor, x + (Terrain.BlockWidth / 2), y + (Terrain.BlockHeight / 2) + (Terrain.BlockHeight / 10), (Terrain.BlockWidth / 2), (Terrain.BlockHeight / 2), fill: true, border: false);
+                            }
                             break;
                         case BlockType.Egg:
+                            // note - same code is in Ant.Draw
+                            var eggWidth = Terrain.BlockWidth/2;
+                            var eggHeight = Terrain.BlockHeight/2;
+                            // background
                             g.Rectangle(AirColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
-                            g.Ellipse(RGBA.White, x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true);
+                            // series of small ellipses in the shape of a 3 segment egg
+                            g.Ellipse(RGBA.White, x + (eggWidth / 2), y + (eggHeight / 4), (eggWidth / 2), (eggHeight / 3), fill: true, border: true);
+                            g.Ellipse(RGBA.White, x + (eggWidth / 4), y + (eggHeight / 3), (eggWidth / 2), (eggHeight / 3), fill: true, border: true);
+                            g.Ellipse(RGBA.White, x, y + (eggHeight / 4), (eggWidth / 2), (eggHeight / 3), fill: true, border: true);
                             break;
                         default:
                             throw new Exception("invalid dirt state");

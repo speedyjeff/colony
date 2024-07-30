@@ -223,7 +223,11 @@ namespace colony
                         // keep the block details as air
 
                         // request that an Ant as an Egg be added
-                        if (OnAddEgg != null) OnAddEgg((col * BlockWidth) - (Width / 2), (row * BlockHeight) - (Height / 2));
+                        if (OnAddEgg != null)
+                        {
+                            // put the egg into the middle of the block
+                            OnAddEgg((col * BlockWidth) - (Width / 2) + (BlockWidth / 4), (row * BlockHeight) - (Height / 2) + (BlockHeight / 4));
+                        }
 
                         // remove the drop pheromone
                         SetBlockPheromone(row, col, PheromoneType.DropEgg, DirectionType.None);
@@ -291,13 +295,6 @@ namespace colony
                     {
                         // increase the counter
                         Blocks[row][col].Counter++;
-
-                        // check if this block is now full
-                        if (Blocks[row][col].Counter >= BlockConstants.FoodFull)
-                        {
-                            // remove the pheromone
-                            SetBlockPheromone(row, col, PheromoneType.DropFood, DirectionType.None);
-                        }
 
                         return true;
                     }

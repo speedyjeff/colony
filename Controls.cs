@@ -30,35 +30,17 @@ namespace colony
             PreviousSurfaceWidth = PreviousSurfaceHeight = 0;
         } 
 
-        /*
-        public bool TryGetSelectedId(out PheromoneType type)
-        {
-            for (int i = 0; i < Buttons.Count; i++)
-            {
-                if (Buttons[i].IsSelected)
-                {
-                    type = Buttons[i].Type;
-                    return true;
-                }
-            }
-
-            // did not find it
-            type = PheromoneType.None;
-            return false;
-        }
-        */
-
-        public void MouseDown(MouseButton btn, float x, float y)
+        public bool TryMouseDown(MouseButton btn, float x, float y)
         {
             // sanity check
-            if (Buttons == null || Buttons.Count == 0) return;
+            if (Buttons == null || Buttons.Count == 0) return false;
 
             // check if the click is outside of the bounds of the buttons
             if (x < Buttons[0].Left || x > Buttons[Buttons.Count - 1].Left + Buttons[Buttons.Count - 1].Width ||
                 y < Buttons[0].Top  || y > Buttons[Buttons.Count - 1].Top + Buttons[Buttons.Count - 1].Height)
             {
                 // do not check/change state
-                return;
+                return false;
             }
 
             // change state on if the click is within the bounds of the buttons
@@ -84,6 +66,8 @@ namespace colony
             {
                 OnSelectionChange(PheromoneType.None);
             }
+
+            return true;
         }
 
         public override void Draw(IGraphics g)

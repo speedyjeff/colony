@@ -49,6 +49,9 @@ namespace colony
             Terrain = new Terrain(width: 1000, height: 1000, scene);
             Terrain.Speed = background.BasePace * Constants.Speed;
 
+            if (Terrain.Speed > (Terrain.BlockWidth / 2) ||
+                Terrain.Speed > (Terrain.BlockHeight / 2)) throw new Exception("speed is too fast for the terrain");
+
             // add blocks
             var blocks = new Blocks(Terrain) { X = 0, Y = 0 };
 
@@ -57,12 +60,12 @@ namespace colony
             var players = new Player[]
             {
                 Camera,
-                new Ant(Terrain) { Name = "digger", X = -10, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                new Ant(Terrain) { Name = "digger", X = -20, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                new Ant(Terrain) { Name = "digger", X = -30, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveDirt },
-                new Ant(Terrain) { Name = "queen", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveQueen },
-                new Ant(Terrain) { Name = "gatherer", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveFood },
-                new Ant(Terrain) { Name = "carrier", X = 0, Y = -1 * Terrain.BlockHeight, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, Following = PheromoneType.MoveEgg },
+                CreateAnt(Terrain, x: -10, y: -1 * Terrain.BlockHeight, PheromoneType.MoveDirt),
+                CreateAnt(Terrain, x: -20, y: -1 * Terrain.BlockHeight, PheromoneType.MoveDirt),
+                CreateAnt(Terrain, x: -30, y: -1 * Terrain.BlockHeight, PheromoneType.MoveDirt),
+                CreateAnt(Terrain, x: 0, y: -1 * Terrain.BlockHeight, PheromoneType.MoveQueen),
+                CreateAnt(Terrain, x: 0, y: -1 * Terrain.BlockHeight, PheromoneType.MoveFood),
+                CreateAnt(Terrain, x: 0, y: -1 * Terrain.BlockHeight, PheromoneType.MoveEgg),
             };
 
             // create the HUD
@@ -113,10 +116,16 @@ namespace colony
         private Terrain Terrain;
         private PheromoneType CurrentPheromone;
 
+        private Ant CreateAnt(Terrain terrain, float x, float y, PheromoneType pheromone)
+        {
+            return new Ant(Terrain) { X = x, Y = y, Width = Terrain.BlockWidth / 4, Height = Terrain.BlockHeight / 2, Following = pheromone };
+        }
+
         private void Terrain_OnAddEgg(float x, float y)
         {
             // the Terrain is requesting that an Egg (eg. Ant in egg form) be added at X,Y
-            var egg = new Ant(Terrain) { X = x, Y = y, Width = Terrain.BlockWidth / 2, Height = Terrain.BlockHeight / 2, IsEgg = true, Following = PheromoneType.None };
+            var egg = CreateAnt(Terrain, x, y, PheromoneType.None);
+            egg.IsEgg = true;
             World.AddItem(egg);
         }
 
@@ -127,11 +136,11 @@ namespace colony
 
         private bool World_OnBeforeMouseDown(Element elem, MouseButton btn, float sx, float sy, float wx, float wy, float wz, ref char key)
         {
+            // share with the Hud (check if 'handled')
+            if (Hud.TryMouseDown(btn, sx, sy)) return true;
+
             // capture the button press
             MouseButton = btn;
-
-            // share with the Hud
-            Hud.MouseDown(btn, sx, sy);
 
             // call move to get 'click' semantics
             World_OnAfterMousemove(elem, sx, sy, wx, wy, wz);
@@ -202,16 +211,14 @@ namespace colony
                 key == Constants.Left2 ||
                 key == Constants.LeftArrow)
             {
-                key = Constants.Right;
-                World.Teleport(Camera, Camera.X + speed, Camera.Y);
+                World.Teleport(Camera, Camera.X - speed, Camera.Y);
                 return true;
             }
             else if (key == Constants.Right ||
                 key == Constants.Right2 ||
                 key == Constants.RightArrow)
             {
-                key = Constants.Left;
-                World.Teleport(Camera, Camera.X - speed, Camera.Y);
+                World.Teleport(Camera, Camera.X + speed, Camera.Y);
                 return true;
             }
             else if (key == Constants.Down ||

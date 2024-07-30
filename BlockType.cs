@@ -22,7 +22,8 @@ namespace colony
     {
         public const int FoodFull = 4;
         public const int QueenFull = 4;
-        public const int QueenDigest = 200;
-        public const int EggHatch = 400;
+        public const int QueenDigest = 200; // 200
+        public const int EggHatch = 400; // 400
+        public const int AntAdultAge = 4000;
     }
 }
