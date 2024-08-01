@@ -10,13 +10,13 @@ namespace colony
     {
         None = 0,
         MoveDirt = 1,
-        MoveEgg = 3,
-        MoveFood = 4,
-        MoveDeadAnt = 5,
-        MoveQueen = 6,
-        DropDirt = 7,
-        DropEgg = 8,
-        DropFood = 9,
-        DropDeadAnt = 10
+        MoveEgg = 2,
+        MoveFood = 3,
+        MoveDeadAnt = 4,
+        MoveQueen = 5,
+        DropDirt = 6,
+        DropEgg = 7,
+        DropFood = 8,
+        DropDeadAnt = 9
     }
 }

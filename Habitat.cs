@@ -41,12 +41,14 @@ namespace colony
             var background = new Background(width, height) { GroundColor = new RGBA { R = 100, G = 100, B = 100, A = 255 }, BasePace = 1f };
 
             // initial the terrain blocks
-            var scene = TerrainGenerator.SplitInHalf(rows: 10, columns: 10);
+            TerrainGenerator.SplitInHalf(rows: 10, columns: 10, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
+            //TerrainGenerator.BigEmpty(out BlockDetails[][] scene, out PlayerDetails[] playerDets);
+            //var scene = TerrainGenerator.DemoRound();
 
             // init
             MouseButton = engine.Common.MouseButton.None;
             CurrentPheromone = PheromoneType.None;
-            Terrain = new Terrain(width: 1000, height: 1000, scene);
+            Terrain = new Terrain(width: 100 * scene[0].Length, height: 100 * scene.Length, scene);
             Terrain.Speed = background.BasePace * Constants.Speed;
 
             if (Terrain.Speed > (Terrain.BlockWidth / 2) ||
@@ -57,16 +59,12 @@ namespace colony
 
             // add the camera and starting ants
             Camera = new Camera() { Name = "camera", X = 0, Y = 0 };
-            var players = new Player[]
+            var players = new Player[1 + playerDets.Length];
+            players[0] = Camera;
+            for (int i = 0; i < playerDets.Length; i++)
             {
-                Camera,
-                CreateAnt(Terrain, x: -10, y: -1 * Terrain.BlockHeight, PheromoneType.MoveDirt),
-                CreateAnt(Terrain, x: -20, y: -1 * Terrain.BlockHeight, PheromoneType.MoveDirt),
-                CreateAnt(Terrain, x: -30, y: -1 * Terrain.BlockHeight, PheromoneType.MoveDirt),
-                CreateAnt(Terrain, x: 0, y: -1 * Terrain.BlockHeight, PheromoneType.MoveQueen),
-                CreateAnt(Terrain, x: 0, y: -1 * Terrain.BlockHeight, PheromoneType.MoveFood),
-                CreateAnt(Terrain, x: 0, y: -1 * Terrain.BlockHeight, PheromoneType.MoveEgg),
-            };
+                players[i + 1] = CreateAnt(Terrain, playerDets[i].X, playerDets[i].Y, playerDets[i].Pheromone );
+            }
 
             // create the HUD
             Hud = new Controls();
@@ -91,6 +89,9 @@ namespace colony
               new Element[] { blocks },
               background
             );
+
+            // zoom all the way out
+            if (scene.Length > 10) for (int i=0; i<10; i++) World.Mousewheel(delta: -1f);
 
             // callbacks
             World.OnBeforeKeyPressed += CameraMovement;

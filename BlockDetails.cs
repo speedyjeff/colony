@@ -8,18 +8,12 @@ namespace colony
         public int Counter;
         public DirectionType[] Pheromones;
 
-        public static BlockDetails[][] Create(int rows, int columns)
+        public BlockDetails()
         {
-            var blocks = new BlockDetails[rows][];
-            for (var r = 0; r < rows; r++)
-            {
-                blocks[r] = new BlockDetails[columns];
-                for (var c = 0; c < columns; c++)
-                {
-                    blocks[r][c].Type = BlockType.None;
-                    blocks[r][c].Counter = 0;
-                    blocks[r][c].Pheromones = new DirectionType[]
-                            {
+            Type = BlockType.None;
+            Counter = 0;
+            Pheromones = new DirectionType[]
+                        {
                             DirectionType.None, // None
                             DirectionType.None, // MoveDirt
                             DirectionType.None, // MoveEgg
@@ -30,7 +24,18 @@ namespace colony
                             DirectionType.None, // DropEgg
                             DirectionType.None, // DropFood
                             DirectionType.None, // DropDeadAnt
-                            };
+                        };
+        }
+
+        public static BlockDetails[][] Create(int rows, int columns)
+        {
+            var blocks = new BlockDetails[rows][];
+            for (var r = 0; r < rows; r++)
+            {
+                blocks[r] = new BlockDetails[columns];
+                for (var c = 0; c < columns; c++)
+                {
+                    blocks[r][c] = new BlockDetails();
                 }
             }
             return blocks;

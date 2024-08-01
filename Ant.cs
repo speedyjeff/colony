@@ -73,8 +73,9 @@ namespace colony
 
         public override void Draw(IGraphics g)
         {
-            // get the color for the Ant
+            // get details for the Ant
             RGBA color = RGBA.Black;
+            var antSizeFactor = 1f;
             switch (Following)
             {
                 case PheromoneType.MoveDirt:
@@ -82,9 +83,11 @@ namespace colony
                     break;
                 case PheromoneType.MoveQueen:
                     color = Purple;
+                    antSizeFactor = 2f;
                     break;
                 case PheromoneType.MoveFood:
                     color = Green;
+                    antSizeFactor = 0.75f;
                     break;
                 case PheromoneType.MoveEgg:
                     color = RGBA.White;
@@ -119,9 +122,10 @@ namespace colony
                     g.Ellipse(PaleYellow, X - (Width / 2), Y - (Height / 2), Math.Max(Width, Height), Math.Max(Width, Height), fill: true, border: false);
                 }
 
-                // scale width and height based on age (scale by 0.5f and 1f)
-                var antWidth = (Width * 0.5f) + (Width * (0.5f * ((float)Age / (float)BlockConstants.AntAdultAge)));
-                var antHeight = (Height * 0.5f) + (Height * (0.5f * ((float)Age / (float)BlockConstants.AntAdultAge)));
+                // scale width and height based on age (scale by 1/2 to full antSizeFactor)
+                var midFactor = (antSizeFactor / 2f);
+                var antWidth = (Width * (antSizeFactor - midFactor)) + (Width * (midFactor * ((float)Age / (float)BlockConstants.AntAdultAge)));
+                var antHeight = (Height * (antSizeFactor - midFactor)) + (Height * (midFactor * ((float)Age / (float)BlockConstants.AntAdultAge)));
 
                 // draw the ant (using 3 points of the parallelogram)
                 RotateAntBoundingBox(antWidth, antHeight);
@@ -761,20 +765,9 @@ namespace colony
                 return move;
             }
 
-            // choose a random direction
-            var drive = Utility.GetRandom(variance: 0.8f);
-            if ((int)Math.Ceiling(Utility.GetRandom(variance: 100f)) % 2 == 0)
-            {
-                move.dX = drive;
-                if (drive < 0) move.dY = 1f - Math.Abs(drive);
-                else move.dY = -1f + Math.Abs(drive);
-            }
-            else
-            {
-                move.dY = drive;
-                if (drive < 0) move.dX = 1f - Math.Abs(drive);
-                else move.dX = -1f + Math.Abs(drive);
-            }
+            // choose an angle and derive a move based on it
+            var angle = Utility.GetRandom(variance: 360f);
+            Collision.CalculateLineByAngle(x: 0, y: 0, angle, distance: 0.7f, out float x1, out float y1, out move.dX, out move.dY);
 
             // ensure the direction is valid
             var sum = (Math.Abs(move.dX) + Math.Abs(move.dY)) - 1f;
