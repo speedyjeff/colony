@@ -243,6 +243,17 @@ namespace colony
                         SetBlockPheromone(row, col, PheromoneType.MoveEgg, DirectionType.Up);
                         return true;
                     }
+                    else if (pheromone == PheromoneType.DropDeadAnt &&
+                        Blocks[row][col].Pheromones[(int)PheromoneType.DropDeadAnt] != DirectionType.None)
+                    {
+                        // set block details
+                        Blocks[row][col].Type = BlockType.DeadAnt;
+
+                        // remove the drop pheromone
+                        SetBlockPheromone(row, col, PheromoneType.DropDeadAnt, DirectionType.None);
+
+                        return true;
+                    }
                 }
                 else if (Blocks[row][col].Type == BlockType.Dirt)
                 {
@@ -262,6 +273,21 @@ namespace colony
 
                         // mark the block as traversable
                         Path.SetTraversable(row, col, traversable: true);
+                        return true;
+                    }
+                }
+                else if (Blocks[row][col].Type == BlockType.DeadAnt)
+                {
+                    // check that we can pick up this block
+                    if (pheromone == PheromoneType.MoveDeadAnt &&
+                        Blocks[row][col].Pheromones[(int)PheromoneType.MoveDeadAnt] != DirectionType.None)
+                    {
+                        // set block details
+                        Blocks[row][col].Type = BlockType.Air;
+
+                        // remove the pheromone
+                        SetBlockPheromone(row, col, PheromoneType.MoveDeadAnt, DirectionType.None);
+
                         return true;
                     }
                 }

@@ -43,6 +43,9 @@ namespace colony
             // debug egg
             blocks[(rows / 2) - 1][0].Type = BlockType.Egg;
 
+            // debug dead ant
+            blocks[(rows / 2) - 2][1].Type = BlockType.DeadAnt;
+
             // add default players
             players = new PlayerDetails[]
             {
@@ -52,6 +55,7 @@ namespace colony
                 new PlayerDetails() { X = 0, Y = -100, Pheromone = PheromoneType.MoveQueen },
                 new PlayerDetails() { X = 0, Y = -100, Pheromone = PheromoneType.MoveFood },
                 new PlayerDetails() { X = 0, Y = -100, Pheromone = PheromoneType.MoveEgg },
+                new PlayerDetails() { X = 0, Y = -100, Pheromone = PheromoneType.MoveDeadAnt },
             };
         }
 

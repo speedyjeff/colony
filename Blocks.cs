@@ -19,12 +19,14 @@ namespace colony
             DirtColors = new RGBA[Terrain.Rows][];
             AirColors = new RGBA[Terrain.Rows][];
             FoodColors = new RGBA[Terrain.Rows][];
+            DeadAntColors = new RGBA[Terrain.Rows][];
             for (int r = 0; r < Terrain.Rows; r++)
             {
                 // initialize
                 DirtColors[r] = new RGBA[Terrain.Columns];
                 AirColors[r] = new RGBA[Terrain.Columns];
                 FoodColors[r] = new RGBA[Terrain.Columns];
+                DeadAntColors[r] = new RGBA[Terrain.Columns];
 
                 // set the values
                 for (int c = 0; c < Terrain.Columns; c++)
@@ -54,6 +56,15 @@ namespace colony
                         R = (byte)(GreenColor.R + (GreenColor.R * rand)),
                         G = (byte)(GreenColor.G + (GreenColor.G * rand)),
                         B = (byte)(GreenColor.B + (GreenColor.B * rand)),
+                        A = 50
+                    };
+                    // dead ant
+                    rand = Utility.GetRandom(variance: 0.2f);
+                    DeadAntColors[r][c] = new RGBA
+                    {
+                        R = (byte)(RustColor.R + (RustColor.R * rand)),
+                        G = (byte)(RustColor.G + (RustColor.G * rand)),
+                        B = (byte)(RustColor.B + (RustColor.B * rand)),
                         A = 50
                     };
                 }
@@ -126,6 +137,15 @@ namespace colony
                             g.Ellipse(RGBA.White, x + (eggWidth / 4), y + (eggHeight / 3), (eggWidth / 2), (eggHeight / 3), fill: true, border: true);
                             g.Ellipse(RGBA.White, x, y + (eggHeight / 4), (eggWidth / 2), (eggHeight / 3), fill: true, border: true);
                             break;
+                        case BlockType.DeadAnt:
+                            // background
+                            g.Rectangle(AirColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
+                            // 3 small horizonal ellipses
+                            var thickness = 1f;
+                            g.Ellipse(DeadAntColors[r][c], x + (Terrain.BlockWidth / 4), y + (Terrain.BlockHeight / 4), (Terrain.BlockWidth / 6), (Terrain.BlockHeight / 8), fill: true, border: true, thickness);
+                            g.Ellipse(DeadAntColors[r][c], x + (Terrain.BlockWidth / 5), y + (Terrain.BlockHeight / 3), (Terrain.BlockWidth / 6), (Terrain.BlockHeight / 8), fill: true, border: true, thickness);
+                            g.Ellipse(DeadAntColors[r][c], x + (Terrain.BlockWidth / 4), y + (Terrain.BlockHeight * 0.45f), (Terrain.BlockWidth / 6), (Terrain.BlockHeight / 8), fill: true, border: true, thickness);
+                            break;
                         default:
                             throw new Exception("invalid dirt state");
                     }
@@ -157,6 +177,12 @@ namespace colony
                         case PheromoneType.DropEgg:
                             DisplayDropPheromone(g, WhiteColor, pheromones[(int)PheromoneType.DropEgg], x, y);
                             break;
+                        case PheromoneType.MoveDeadAnt:
+                            DisplayMovePheromone(g, RustColor, pheromones[(int)PheromoneType.MoveDeadAnt], x, y);
+                            break;
+                        case PheromoneType.DropDeadAnt:
+                            DisplayDropPheromone(g, RustColor, pheromones[(int)PheromoneType.DropDeadAnt], x, y);
+                            break;
                         default:
                             throw new Exception("invalid pheromone");
                     }
@@ -177,11 +203,13 @@ namespace colony
         private RGBA[][] DirtColors;
         private RGBA[][] AirColors;
         private RGBA[][] FoodColors;
+        private RGBA[][] DeadAntColors;
         private RGBA BrownColor = new RGBA { R = 139, G = 69, B = 19, A = 50 };
         private RGBA PurpleColor = new RGBA { R = 128, G = 0, B = 128, A = 50 };
         private RGBA WhiteColor = new RGBA { R = 250, G = 250, B = 250, A = 50 };
         private RGBA RedColor = new RGBA { R = 255, G = 0, B = 0, A = 50 };
         private RGBA GreenColor = new RGBA { R = 0, G = 255, B = 0, A = 50 };
+        private RGBA RustColor = new RGBA { R = 210, G = 105, B = 30, A = 50 };
         private Terrain Terrain;
         private PheromoneType ActivePheromone;
 

@@ -7,6 +7,7 @@ using engine.Common.Entities.AI;
 // todo
 //  ants can die and become deadAnts which can be moved
 //  save & load - build demos
+//  add DeadAnts (move, drop, art)
 
 namespace colony
 {
@@ -95,6 +96,9 @@ namespace colony
                 case PheromoneType.None:
                     color = RGBA.Black;
                     break;
+                case PheromoneType.MoveDeadAnt:
+                    color = Rust;
+                    break;
                 default:
                     throw new Exception("must have a pheromone to follow");
             }
@@ -139,7 +143,7 @@ namespace colony
                         // draw a small rectangle
                         g.Rectangle(Brown, X-(antWidth/2), Y-(antWidth/2), antWidth / 4, antHeight / 4, fill: true, border: true, thickness: 1);
                     }
-                    else if (Following == PheromoneType.MoveEgg || Following == PheromoneType.MoveFood)
+                    else if (Following == PheromoneType.MoveEgg || Following == PheromoneType.MoveFood || Following == PheromoneType.MoveDeadAnt)
                     {
                         // draw a small ellipse
                         g.Ellipse(color, X-(antWidth/2), Y-(antWidth/2), antWidth / 4, antHeight / 4, fill: true, border: true, thickness: 1);
@@ -164,7 +168,7 @@ namespace colony
         public override void Update()
         {
             // update age
-            if (Age < BlockConstants.AntAdultAge) Age++;
+            if (Age < BlockConstants.AntMaxAge) Age++;
 
             // Queen laying Eggs
             if (Following == PheromoneType.MoveQueen)
@@ -228,8 +232,10 @@ namespace colony
                 {
                     // choose a random pheromone
                     var rand = (int)Math.Abs(Math.Floor(Utility.GetRandom(variance: 10)));
-                    if (rand >= 0 && rand < 6) Following = PheromoneType.MoveDirt;
-                    else if (rand >= 6 && rand < 8) Following = PheromoneType.MoveEgg;
+                    if (rand >= 0 && rand < 5) Following = PheromoneType.MoveDirt;
+                    else if (rand >= 5 && rand < 7) Following = PheromoneType.MoveEgg;
+                    else if (rand == 7) Following = PheromoneType.MoveQueen;
+                    else if (rand == 8) Following = PheromoneType.MoveDeadAnt;
                     else Following = PheromoneType.MoveFood;
                 }
 
@@ -241,6 +247,8 @@ namespace colony
                     if (pheromones[(int)PheromoneType.MoveDirt] != DirectionType.None) setPheromone = PheromoneType.MoveDirt;
                     else if (pheromones[(int)PheromoneType.MoveEgg] != DirectionType.None) setPheromone = PheromoneType.MoveEgg;
                     else if (pheromones[(int)PheromoneType.MoveFood] != DirectionType.None) setPheromone = PheromoneType.MoveFood;
+                    else if (pheromones[(int)PheromoneType.MoveQueen] != DirectionType.None) setPheromone = PheromoneType.MoveQueen;
+                    else if (pheromones[(int)PheromoneType.MoveDeadAnt] != DirectionType.None) setPheromone = PheromoneType.MoveDeadAnt;
 
                     // set the pheromone to follow and remove the pheromone
                     if (setPheromone != PheromoneType.None)
@@ -260,7 +268,24 @@ namespace colony
                 Age = 0;
             }
 
-            // todo - death?
+            // death?
+            if (Age >= BlockConstants.AntMaxAge)
+            {
+                // todo - what if holding something OR this is not a convenient place to die (eg. on food/egg/dead ant)
+
+                // add the drop pheromone
+                Terrain.TryApplyPheromone(X, Y, PheromoneType.DropDeadAnt);
+
+                // die
+                Terrain.TryChangeBlockDetails(X, Y, default(Movement), PheromoneType.DropDeadAnt);
+
+                // add a pickup pheromone
+                Terrain.TryApplyPheromone(X, Y, PheromoneType.MoveDeadAnt);
+
+                // change health to 0 and it will die
+                Health = 0;
+                IsDead = true;
+            }
         }
 
         public override ActionEnum Action(List<Element> elements, float angleToCenter, bool inZone, ref float xdelta, ref float ydelta, ref float zdelta, ref float angle)
@@ -291,6 +316,10 @@ namespace colony
                 case PheromoneType.MoveEgg:
                     dropPheromone = PheromoneType.DropEgg;
                     seekingBlock = BlockType.Egg;
+                    break;
+                case PheromoneType.MoveDeadAnt:
+                    dropPheromone = PheromoneType.DropDeadAnt;
+                    seekingBlock = BlockType.DeadAnt;
                     break;
                 case PheromoneType.None:
                     dropPheromone = PheromoneType.None;
@@ -412,6 +441,7 @@ namespace colony
         private static RGBA Yellow = new RGBA { R = 255, G = 255, B = 0, A = 255 };
         private static RGBA PaleYellow = new RGBA { R = 255, G = 255, B = 0, A = 100 };
         private static RGBA Transparent = new RGBA { R = 1, G = 2, B = 3, A = 255 };
+        private static RGBA Rust = new RGBA { R = 210, G = 105, B = 30, A = 255 };
         private Point[] Points;
         private DirectionType[] Directions;
         private Terrain Terrain;

@@ -14,8 +14,7 @@ namespace colony
         Egg = 3,
         Food = 4,
         DeadAnt = 5,
-        WasteDirt = 6,
-        WasteDeadAnt = 7
+        WasteDirt = 6
     }
 
     static class BlockConstants
@@ -24,6 +23,7 @@ namespace colony
         public const int QueenFull = 4;
         public const int QueenDigest = 200; // 200
         public const int EggHatch = 400; // 400
-        public const int AntAdultAge = 4000;
+        public const int AntAdultAge = 4000; // 4000
+        public const int AntMaxAge = 4001; // 8000
     }
 }

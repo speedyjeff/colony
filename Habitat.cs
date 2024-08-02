@@ -4,6 +4,7 @@ using engine;
 using engine.Winforms;
 using engine.Common;
 using engine.Common.Entities;
+using Microsoft.AspNetCore.SignalR.Client;
 
 // architecture
 //
@@ -70,11 +71,13 @@ namespace colony
             Hud = new Controls();
             Hud.AddControl(PheromoneType.MoveDirt, new RGBA() { R = 255, G = 0, B = 0, A = 255 }, "dirt");
             Hud.AddControl(PheromoneType.DropDirt, new RGBA() { R = 255, G = 0, B = 0, A = 100 }, "drop");
-            Hud.AddControl(PheromoneType.MoveQueen, new RGBA() { R = 128, G = 0, B = 128, A = 255 }, "queen");
             Hud.AddControl(PheromoneType.MoveFood, new RGBA() { R = 0, G = 255, B = 0, A = 255 }, "food");
             Hud.AddControl(PheromoneType.DropFood, new RGBA() { R = 0, G = 255, B = 0, A = 100 }, "drop");
             Hud.AddControl(PheromoneType.MoveEgg, new RGBA() { R = 255, G = 255, B = 255, A = 255 }, "egg");
             Hud.AddControl(PheromoneType.DropEgg, new RGBA() { R = 255, G = 255, B = 255, A = 100 }, "drop");
+            Hud.AddControl(PheromoneType.MoveDeadAnt, new RGBA() { R = 210, G = 105, B = 30, A = 200 }, "dead");
+            Hud.AddControl(PheromoneType.DropDeadAnt, new RGBA() { R = 210, G = 105, B = 30, A = 100 }, "drop");
+            Hud.AddControl(PheromoneType.MoveQueen, new RGBA() { R = 128, G = 0, B = 128, A = 255 }, "queen");
 
             // create the world
             World = new World(
