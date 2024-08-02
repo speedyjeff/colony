@@ -5,9 +5,7 @@ using engine.Common.Entities;
 using engine.Common.Entities.AI;
 
 // todo
-//  ants can die and become deadAnts which can be moved
 //  save & load - build demos
-//  add DeadAnts (move, drop, art)
 
 namespace colony
 {
@@ -271,20 +269,15 @@ namespace colony
             // death?
             if (Age >= BlockConstants.AntMaxAge)
             {
-                // todo - what if holding something OR this is not a convenient place to die (eg. on food/egg/dead ant)
-
-                // add the drop pheromone
-                Terrain.TryApplyPheromone(X, Y, PheromoneType.DropDeadAnt);
+                // todo - what if holding something
 
                 // die
-                Terrain.TryChangeBlockDetails(X, Y, default(Movement), PheromoneType.DropDeadAnt);
-
-                // add a pickup pheromone
-                Terrain.TryApplyPheromone(X, Y, PheromoneType.MoveDeadAnt);
-
-                // change health to 0 and it will die
-                Health = 0;
-                IsDead = true;
+                if (Terrain.TryChangeBlockDetails(X, Y, default(Movement), PheromoneType.DeadAnt))
+                {
+                    // change health to 0 and it will die
+                    Health = 0;
+                    IsDead = true;
+                }
             }
         }
 

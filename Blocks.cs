@@ -142,9 +142,16 @@ namespace colony
                             g.Rectangle(AirColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
                             // 3 small horizonal ellipses
                             var thickness = 1f;
-                            g.Ellipse(DeadAntColors[r][c], x + (Terrain.BlockWidth / 4), y + (Terrain.BlockHeight / 4), (Terrain.BlockWidth / 6), (Terrain.BlockHeight / 8), fill: true, border: true, thickness);
-                            g.Ellipse(DeadAntColors[r][c], x + (Terrain.BlockWidth / 5), y + (Terrain.BlockHeight / 3), (Terrain.BlockWidth / 6), (Terrain.BlockHeight / 8), fill: true, border: true, thickness);
-                            g.Ellipse(DeadAntColors[r][c], x + (Terrain.BlockWidth / 4), y + (Terrain.BlockHeight * 0.45f), (Terrain.BlockWidth / 6), (Terrain.BlockHeight / 8), fill: true, border: true, thickness);
+                            for (int i = 0; i < count; i++)
+                            {
+                                // dead ant
+                                g.Ellipse(DeadAntColors[r][c], x + (Terrain.BlockWidth / 4), y + (Terrain.BlockHeight / 4), (Terrain.BlockWidth / 6), (Terrain.BlockHeight / 8), fill: true, border: true, thickness);
+                                g.Ellipse(DeadAntColors[r][c], x + (Terrain.BlockWidth / 5), y + (Terrain.BlockHeight / 3), (Terrain.BlockWidth / 6), (Terrain.BlockHeight / 8), fill: true, border: true, thickness);
+                                g.Ellipse(DeadAntColors[r][c], x + (Terrain.BlockWidth / 4), y + (Terrain.BlockHeight * 0.45f), (Terrain.BlockWidth / 6), (Terrain.BlockHeight / 8), fill: true, border: true, thickness);
+                                // shift for slight overlap
+                                x += Terrain.BlockWidth / 10;
+                                y += Terrain.BlockHeight / 10;
+                            }
                             break;
                         default:
                             throw new Exception("invalid dirt state");

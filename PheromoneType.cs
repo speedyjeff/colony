@@ -17,6 +17,7 @@ namespace colony
         DropDirt = 6,
         DropEgg = 7,
         DropFood = 8,
-        DropDeadAnt = 9
+        DropDeadAnt = 9,
+        DeadAnt = 10
     }
 }

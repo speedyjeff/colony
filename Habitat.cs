@@ -42,8 +42,8 @@ namespace colony
             var background = new Background(width, height) { GroundColor = new RGBA { R = 100, G = 100, B = 100, A = 255 }, BasePace = 1f };
 
             // initial the terrain blocks
-            TerrainGenerator.SplitInHalf(rows: 10, columns: 10, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
-            //TerrainGenerator.BigEmpty(out BlockDetails[][] scene, out PlayerDetails[] playerDets);
+            //TerrainGenerator.SplitInHalf(rows: 10, columns: 10, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
+            TerrainGenerator.BigEmpty(out BlockDetails[][] scene, out PlayerDetails[] playerDets);
             //var scene = TerrainGenerator.DemoRound();
 
             // init

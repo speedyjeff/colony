@@ -86,7 +86,6 @@ namespace colony
                     Y = 0,
                     Pheromone = (PheromoneType)(i % 5 + 1)
                 };
-                if (players[i].Pheromone == PheromoneType.MoveDeadAnt) players[i].Pheromone = PheromoneType.MoveDirt;
             }
         }
 

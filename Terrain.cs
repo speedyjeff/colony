@@ -243,14 +243,19 @@ namespace colony
                         SetBlockPheromone(row, col, PheromoneType.MoveEgg, DirectionType.Up);
                         return true;
                     }
-                    else if (pheromone == PheromoneType.DropDeadAnt &&
-                        Blocks[row][col].Pheromones[(int)PheromoneType.DropDeadAnt] != DirectionType.None)
+                    else if (pheromone == PheromoneType.DeadAnt ||
+                        (pheromone == PheromoneType.DropDeadAnt &&
+                        Blocks[row][col].Pheromones[(int)PheromoneType.DropDeadAnt] != DirectionType.None))
                     {
                         // set block details
                         Blocks[row][col].Type = BlockType.DeadAnt;
+                        Blocks[row][col].Counter = 1;
 
-                        // remove the drop pheromone
-                        SetBlockPheromone(row, col, PheromoneType.DropDeadAnt, DirectionType.None);
+                        // check if this is a DeadAnt (in which case we should add the pheromone to pick it up)
+                        if (pheromone == PheromoneType.DeadAnt)
+                        {
+                            SetBlockPheromone(row, col, PheromoneType.MoveDeadAnt, DirectionType.Up);
+                        }
 
                         return true;
                     }
@@ -282,11 +287,34 @@ namespace colony
                     if (pheromone == PheromoneType.MoveDeadAnt &&
                         Blocks[row][col].Pheromones[(int)PheromoneType.MoveDeadAnt] != DirectionType.None)
                     {
-                        // set block details
-                        Blocks[row][col].Type = BlockType.Air;
+                        // decrement count
+                        Blocks[row][col].Counter--;
 
-                        // remove the pheromone
-                        SetBlockPheromone(row, col, PheromoneType.MoveDeadAnt, DirectionType.None);
+                        if (Blocks[row][col].Counter <= 0)
+                        {
+                            // remove the dead ant
+                            Blocks[row][col].Type = BlockType.Air;
+
+                            // remove the pheromone
+                            SetBlockPheromone(row, col, PheromoneType.MoveDeadAnt, DirectionType.None);
+                        }
+
+                        return true;
+                    }
+
+                    // check if we are dropping off DeadAnt
+                    else if (pheromone == PheromoneType.DropDeadAnt &&
+                        Blocks[row][col].Pheromones[(int)PheromoneType.DropDeadAnt] != DirectionType.None &&
+                        Blocks[row][col].Counter < BlockConstants.DeadAntStackFull)
+                    {
+                        // increase the counter
+                        Blocks[row][col].Counter++;
+
+                        if (Blocks[row][col].Counter >= BlockConstants.DeadAntStackFull)
+                        {
+                            // remove the pheromone
+                            SetBlockPheromone(row, col, PheromoneType.DropDeadAnt, DirectionType.None);
+                        }
 
                         return true;
                     }
@@ -461,11 +489,14 @@ namespace colony
 
         private void SetBlockPheromone(int r, int c, PheromoneType pheromone, DirectionType direction)
         {
-            // set the block details
-            Blocks[r][c].Pheromones[(int)pheromone] = direction;
+            lock (this)
+            {
+                // set the block details
+                Blocks[r][c].Pheromones[(int)pheromone] = direction;
 
-            // record in the ShortestPath
-            Path.SetPheromone(r, c, pheromone, direction);
+                // record in the ShortestPath
+                Path.SetPheromone(r, c, pheromone, direction);
+            }
         }
 
         private bool IsBlocking(BlockType block)
