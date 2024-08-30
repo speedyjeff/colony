@@ -44,7 +44,7 @@ namespace colony
             // initial the terrain blocks
             //TerrainGenerator.SplitInHalf(rows: 100, columns: 100, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
             //TerrainGenerator.BigEmpty(out BlockDetails[][] scene, out PlayerDetails[] playerDets);
-            //TerrainGenerator.DemoRound();
+            //TerrainGenerator.DemoRound(rows: 100, columns: 100, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
             TerrainGenerator.Demo(rows: 100, columns: 100, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
 
             // init

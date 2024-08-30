@@ -116,6 +116,7 @@ namespace colony
             var blockWidth = 100;
             var entranceRow = (rows / 3);
             var entranceY = -1 * (blockHeight) * ((rows/2) - entranceRow);
+            var bottomRow = rows - 2;
             var entranceColumns = new int[]
             {
                 (columns / 4), 
@@ -138,7 +139,7 @@ namespace colony
             // add tunnels for the ants to dig
             foreach (var col in entranceColumns)
             {
-                CreateTunnels(blocks, entranceRow, col);
+                CreateVerticalTunnels(blocks, entranceRow, col, bottomRow);
             }
 
             // add interesting rooms off of the tunnels (out of pheromones)
@@ -147,7 +148,8 @@ namespace colony
                 CreateRooms(random, 
                     blocks, 
                     entranceRow, 
-                    col, 
+                    col,
+                    bottomRow,
                     rooms: new PheromoneType[] 
                     {
                         PheromoneType.MoveQueen,
@@ -176,11 +178,11 @@ namespace colony
             for (int c = verticalTunnelColumns[0] + (verticalColumnWidth/2); c < verticalTunnelColumns[1] + (verticalColumnWidth/2); c++)
             {
                 var dir = c < entranceColumns[1] ? DirectionType.Left : DirectionType.Right;
-                if (blocks[rows - 2][c].Type == BlockType.Dirt) blocks[rows-2][c].Pheromones[(int)PheromoneType.MoveDirt] = dir;
+                if (blocks[bottomRow][c].Type == BlockType.Dirt) blocks[bottomRow][c].Pheromones[(int)PheromoneType.MoveDirt] = dir;
             }
 
             // dig vertical tunnels on either side to the top
-            for (int r = verticalRowStart; r < rows - 2; r++)
+            for (int r = verticalRowStart; r < bottomRow; r++)
             {
                 for (int c = 0; c < verticalTunnelColumns.Length; c++)
                 {
@@ -248,16 +250,17 @@ namespace colony
             players = ants.ToArray();
         }
 
-        public static BlockDetails[][] DemoRound()
+        public static void DemoRound(int rows, int columns, out BlockDetails[][] blocks, out PlayerDetails[] players)
         {
-            var columns = 100;
-            var rows = 100;
+            var random = new Random();
+            var blockHeight = 100;
+            var blockWidth = 100;
             int centerC = columns / 2;
             int centerR = rows / 2;
             int radius = Math.Min(centerC, centerR) - (columns/10);
 
             // put the dirt in a circle with a hole in the middle
-            var blocks = new BlockDetails[rows][];
+            blocks = new BlockDetails[rows][];
             for (int r = 0; r < blocks.Length; r++)
             {
                 blocks[r] = new BlockDetails[columns];
@@ -271,7 +274,118 @@ namespace colony
                 }
             }
 
-            return blocks;
+            // add a queen in the middle
+            blocks[centerR][centerC].Pheromones[(int)PheromoneType.MoveQueen] = DirectionType.Up;
+            blocks[centerR][centerC].Pheromones[(int)PheromoneType.DropFood] = DirectionType.Up;
+
+            // add rooms throughout the circle
+            var entranceRow = 10;
+            var entranceCol = 10;
+            var bottomRow = rows - 10;
+            var rightCol = columns - 10;
+            var entranceColumns = new int[]
+            {
+                (columns / 4),
+                (columns / 2),
+                ((2 * columns) / 3)
+            };
+            var entranceRows = new int[]
+            {
+                (rows / 4),
+                (rows / 2),
+                ((2 * rows) / 3)
+            };
+
+            // create dirt piles around the edges
+            var dirtDepth = 5;
+            for(int r = 0; r<rows; r++)
+            {
+                for(int c = 0; c<columns; c++)
+                {
+                    if (r > dirtDepth && r < rows - dirtDepth && c > dirtDepth && c < columns - dirtDepth) continue;
+                    blocks[r][c].Pheromones[(int)PheromoneType.DropDirt] = DirectionType.Up;
+                }
+            }
+
+            // add tunnels for the ants to dig
+            foreach (var col in entranceColumns)
+            {
+                CreateVerticalTunnels(blocks, entranceRow, col, bottomRow);
+            }
+            foreach (var row in entranceRows)
+            {
+                CreateHorizontalTunnels(blocks, row, entranceCol, rightCol);
+            }
+
+            // create rooms
+            foreach (var col in entranceColumns)
+            {
+                CreateRooms(random,
+                    blocks,
+                    entranceRow,
+                    col,
+                    bottomRow,
+                    rooms: new PheromoneType[]
+                    {
+                        PheromoneType.MoveFood,
+                        PheromoneType.DropEgg,
+                        PheromoneType.DropDeadAnt,
+                        PheromoneType.DropDeadAnt,
+                        PheromoneType.MoveFood,
+                        PheromoneType.DropEgg,
+                        PheromoneType.MoveFood,
+                        PheromoneType.MoveFood,
+                        PheromoneType.DropDeadAnt,
+                        PheromoneType.DropDeadAnt,
+                        PheromoneType.MoveFood,
+                        PheromoneType.MoveFood
+                    });
+            }
+
+
+            // add a string of ants around the edges
+            var ants = new List<PlayerDetails>();
+            var topBottomX = -1 * (columns / 2) * blockWidth + blockWidth;
+            var leftRightY = -1 * (rows / 2) * blockHeight + blockHeight;
+            for (int i = 0; i < rows; i++)
+            {
+                var pheromone = PheromoneType.MoveDirt;
+                switch (random.Next() % 15)
+                {
+                    case 0:
+                        pheromone = PheromoneType.MoveQueen;
+                        break;
+                    case 1:
+                    case 2:
+                        pheromone = PheromoneType.MoveFood;
+                        break;
+                    case 3:
+                        pheromone = PheromoneType.MoveEgg;
+                        break;
+                    case 4:
+                    case 5:
+                        pheromone = PheromoneType.MoveDeadAnt;
+                        break;
+                    default:
+                        pheromone = PheromoneType.MoveDirt;
+                        break;
+
+                }
+
+                // top
+                ants.Add(new PlayerDetails() { X = topBottomX, Y = -1 * (rows / 2) * blockHeight + blockHeight, Pheromone = pheromone });
+                // bottom
+                ants.Add(new PlayerDetails() { X = topBottomX, Y = (rows / 2) * blockHeight - blockHeight, Pheromone = pheromone });
+                // left
+                ants.Add(new PlayerDetails() { X = -1 * (columns / 2) * blockWidth + blockWidth, Y = leftRightY, Pheromone = pheromone });
+                // right
+                ants.Add(new PlayerDetails() { X = (columns / 2) * blockWidth - blockWidth, Y = leftRightY, Pheromone = pheromone });
+
+                // increment
+                topBottomX += blockWidth;
+                leftRightY += blockHeight;
+            }
+            players = ants.ToArray();
         }
 
         #region private
@@ -299,17 +413,29 @@ namespace colony
             }
         }
 
-        private static void CreateTunnels(BlockDetails[][] blocks, int row, int col)
+        private static void CreateVerticalTunnels(BlockDetails[][] blocks, int row, int col, int bottomRow)
         {
             // add tunnels for the ants to dig
             // build a tunnel from row to the bottom
-            for (int r = row; r < blocks.Length-2; r++)
+            for (int r = row; r < bottomRow; r++)
             {
+                if (blocks[r][col].Type != BlockType.Dirt) continue;
                 blocks[r][col].Pheromones[(int)PheromoneType.MoveDirt] = DirectionType.Down;
             }
         }
 
-        private static void CreateRooms(Random random, BlockDetails[][] blocks, int row, int col, PheromoneType[] rooms)
+        private static void CreateHorizontalTunnels(BlockDetails[][] blocks, int row, int col, int rightCol)
+        {
+            // add tunnels for the ants to dig
+            // build a tunnel from row to the bottom
+            for (int c = col; c < rightCol; c++)
+            {
+                if (blocks[row][c].Type != BlockType.Dirt) continue;
+                blocks[row][c].Pheromones[(int)PheromoneType.MoveDirt] = DirectionType.Right;
+            }
+        }
+
+        private static void CreateRooms(Random random, BlockDetails[][] blocks, int row, int col, int bottomRow, PheromoneType[] rooms)
         {
             // room pattern
             var room = new byte[][]
@@ -339,7 +465,7 @@ namespace colony
             // add interesting rooms off of the tunnels (out of pheromones)
             var roomRow = row + 1;
             var roomCol = 0;
-            var blocksPerRoom = (blocks.Length - row) / rooms.Length;
+            var blocksPerRoom = (bottomRow - row) / rooms.Length;
             for (int i = 0; i < rooms.Length; i++)
             {
                 // choose which side
@@ -359,9 +485,10 @@ namespace colony
                     {
                         // skip
                         if (room[r][c] == 0) continue;
+                        if (blocks[r + roomRow][c + roomCol].Type != BlockType.Dirt) continue;
 
                         // dig out the room pattern
-                        if (blocks[r + roomRow][c + roomCol].Type == BlockType.Dirt) blocks[r + roomRow][c + roomCol].Pheromones[(int)PheromoneType.MoveDirt] = dir;
+                        blocks[r + roomRow][c + roomCol].Pheromones[(int)PheromoneType.MoveDirt] = dir;
 
                         // place a pheromone of what type of room this is
                         if (rooms[i] == PheromoneType.MoveQueen)
