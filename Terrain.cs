@@ -100,7 +100,10 @@ namespace colony
             if (!TryCoordinatesToRowColumn(x, y, out int r, out int c)) return false;
 
             // exit early if this block matches the last
-            if (Previous.Row == r && Previous.Column == c && PerviousPheromone == pheromone) return false;
+            if (Previous.Row == r && Previous.Column == c && 
+                PerviousPheromone == pheromone && 
+                Blocks[Previous.Row][Previous.Column].Pheromones[(int)pheromone] != DirectionType.None) 
+                return false;
 
             // apply the intent
             Path.NoUpdates = true;

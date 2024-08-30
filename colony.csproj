@@ -18,4 +18,8 @@
     <ProjectReference Include="engine\engine.Winforms\engine.Winforms.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="media\" />
+  </ItemGroup>
+
 </Project>

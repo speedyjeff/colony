@@ -211,12 +211,12 @@ namespace colony
         private RGBA[][] AirColors;
         private RGBA[][] FoodColors;
         private RGBA[][] DeadAntColors;
-        private RGBA BrownColor = new RGBA { R = 139, G = 69, B = 19, A = 50 };
-        private RGBA PurpleColor = new RGBA { R = 128, G = 0, B = 128, A = 50 };
-        private RGBA WhiteColor = new RGBA { R = 250, G = 250, B = 250, A = 50 };
-        private RGBA RedColor = new RGBA { R = 255, G = 0, B = 0, A = 50 };
-        private RGBA GreenColor = new RGBA { R = 0, G = 255, B = 0, A = 50 };
-        private RGBA RustColor = new RGBA { R = 210, G = 105, B = 30, A = 50 };
+        private RGBA BrownColor = new RGBA { R = 139, G = 69, B = 19, A = 255 };
+        private RGBA PurpleColor = new RGBA { R = 128, G = 0, B = 128, A = 255 };
+        private RGBA WhiteColor = new RGBA { R = 250, G = 250, B = 250, A = 255 };
+        private RGBA RedColor = new RGBA { R = 255, G = 0, B = 0, A = 255 };
+        private RGBA GreenColor = new RGBA { R = 0, G = 255, B = 0, A = 255 };
+        private RGBA RustColor = new RGBA { R = 210, G = 105, B = 30, A = 255 };
         private Terrain Terrain;
         private PheromoneType ActivePheromone;
 

@@ -22,9 +22,9 @@ namespace colony
         public const int FoodFull = 4;
         public const int QueenFull = 4;
         public const int DeadAntStackFull = 4;
-        public const int QueenDigest = 200; // 200
-        public const int EggHatch = 400; // 400
-        public const int AntAdultAge = 4000; // 4000
-        public const int AntMaxAge = 4001; // 8000
+        public const int QueenDigest = 200;
+        public const int EggHatch = 400;
+        public const int AntAdultAge = 4000;
+        public const int AntMaxAge = 16000;
     }
 }

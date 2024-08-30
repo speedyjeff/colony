@@ -264,6 +264,9 @@ namespace colony
                 IsEgg = false;
                 TimerCounter = 0;
                 Age = 0;
+
+                // add the pheromone back to this spot for another egg
+                Terrain.TryApplyPheromone(X, Y, PheromoneType.DropEgg);
             }
 
             // death?

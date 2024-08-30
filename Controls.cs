@@ -83,6 +83,9 @@ namespace colony
                 var height = width;
                 var padding = width / 2f;
 
+                // ensure the controls do not run off the screen
+                while ((height * Buttons.Count) + (padding * Buttons.Count) > (g.Height - height)) padding--;
+
                 // set the control positions
                 for (int i = 0; i < Buttons.Count; i++)
                 {

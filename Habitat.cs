@@ -11,9 +11,9 @@ using Microsoft.AspNetCore.SignalR.Client;
 // UI                                   | Game logic     | Entities
 // -------------------------------------|----------------|----------------
 //  World                               |  Terrain       |  Ant
-//   - Handles UI screen drawing        |   - Game logic |  Blocks
-//  Controls                            |                |  Queen
-//   - Handles UI controls              |                |  Egg
+//   - Handles UI screen drawing        |   - Game logic |   - Egg
+//  Controls                            |                |   - Queen
+//   - Handles UI controls              |                |  Blocks
 //  Habitat                             |                |  
 //   - Handles mouse and keyboard input |                |
 //  Camera                              |                |
@@ -39,12 +39,13 @@ namespace colony
             // basic background
             var width = 10000;
             var height = 800;
-            var background = new Background(width, height) { GroundColor = new RGBA { R = 100, G = 100, B = 100, A = 255 }, BasePace = 1f };
+            var background = new Background(width, height) { GroundColor = new RGBA { R = 100, G = 100, B = 100, A = 255 }, BasePace = 2f };
 
             // initial the terrain blocks
-            //TerrainGenerator.SplitInHalf(rows: 10, columns: 10, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
-            TerrainGenerator.BigEmpty(out BlockDetails[][] scene, out PlayerDetails[] playerDets);
-            //var scene = TerrainGenerator.DemoRound();
+            //TerrainGenerator.SplitInHalf(rows: 100, columns: 100, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
+            //TerrainGenerator.BigEmpty(out BlockDetails[][] scene, out PlayerDetails[] playerDets);
+            //TerrainGenerator.DemoRound();
+            TerrainGenerator.Demo(rows: 100, columns: 100, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
 
             // init
             MouseButton = engine.Common.MouseButton.None;
