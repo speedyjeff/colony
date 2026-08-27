@@ -20,6 +20,7 @@ namespace colony
             AirColors = new RGBA[Terrain.Rows][];
             FoodColors = new RGBA[Terrain.Rows][];
             DeadAntColors = new RGBA[Terrain.Rows][];
+            WasteColors = new RGBA[Terrain.Rows][];
             for (int r = 0; r < Terrain.Rows; r++)
             {
                 // initialize
@@ -27,46 +28,24 @@ namespace colony
                 AirColors[r] = new RGBA[Terrain.Columns];
                 FoodColors[r] = new RGBA[Terrain.Columns];
                 DeadAntColors[r] = new RGBA[Terrain.Columns];
+                WasteColors[r] = new RGBA[Terrain.Columns];
 
                 // set the values
                 for (int c = 0; c < Terrain.Columns; c++)
                 {
                     // dirt
-                    var rand = Utility.GetRandom(variance: 0.2f);
-                    DirtColors[r][c] = new RGBA
-                    {
-                        R = (byte)(BrownColor.R + (BrownColor.R * rand)),
-                        G = (byte)(BrownColor.G + (BrownColor.G * rand)),
-                        B = (byte)(BrownColor.B + (BrownColor.B * rand)),
-                        A = 255
-                    };
+                    var rand = Utility.GetRandom(variance: 0.16f);
+                    DirtColors[r][c] = Vary(BrownColor, rand, 255);
+                    WasteColors[r][c] = Vary(WasteColor, rand, 255);
                     // air
-                    rand = Utility.GetRandom(variance: 0.02f);
-                    AirColors[r][c] = new RGBA
-                    {
-                        R = (byte)(WhiteColor.R + (WhiteColor.R * rand)),
-                        G = (byte)(WhiteColor.G + (WhiteColor.G * rand)),
-                        B = (byte)(WhiteColor.B + (WhiteColor.B * rand)),
-                        A = 50
-                    };
+                    rand = Utility.GetRandom(variance: 0.08f);
+                    AirColors[r][c] = Vary(AirColor, rand, 255);
                     // food
-                    rand = Utility.GetRandom(variance: 0.4f);
-                    FoodColors[r][c] = new RGBA
-                    {
-                        R = (byte)(GreenColor.R + (GreenColor.R * rand)),
-                        G = (byte)(GreenColor.G + (GreenColor.G * rand)),
-                        B = (byte)(GreenColor.B + (GreenColor.B * rand)),
-                        A = 50
-                    };
+                    rand = Utility.GetRandom(variance: 0.22f);
+                    FoodColors[r][c] = Vary(FoodColor, rand, 255);
                     // dead ant
-                    rand = Utility.GetRandom(variance: 0.2f);
-                    DeadAntColors[r][c] = new RGBA
-                    {
-                        R = (byte)(RustColor.R + (RustColor.R * rand)),
-                        G = (byte)(RustColor.G + (RustColor.G * rand)),
-                        B = (byte)(RustColor.B + (RustColor.B * rand)),
-                        A = 50
-                    };
+                    rand = Utility.GetRandom(variance: 0.14f);
+                    DeadAntColors[r][c] = Vary(RustColor, rand, 255);
                 }
             }
         }
@@ -91,9 +70,11 @@ namespace colony
                         case BlockType.Air:
                             g.Rectangle(AirColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
                             break;
-                        case BlockType.WasteDirt:
                         case BlockType.Dirt:
                             g.Rectangle(DirtColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
+                            break;
+                        case BlockType.WasteDirt:
+                            g.Rectangle(WasteColors[r][c], x, y, Terrain.BlockWidth, Terrain.BlockHeight, fill: true, border: false);
                             break;
                         case BlockType.Food:
                             // note - this is based on FoodFull being 4
@@ -197,7 +178,7 @@ namespace colony
             }
 
             // draw the rim
-            g.Rectangle(PurpleColor, 0 - (Width / 2), 0 - (Height / 2), Width, Height, fill: false, border: true, thickness: 2f);
+            g.Rectangle(RimColor, 0 - (Width / 2), 0 - (Height / 2), Width, Height, fill: false, border: true, thickness: 2f);
         }
 
         public void SetActivePheromone(PheromoneType type)
@@ -211,21 +192,42 @@ namespace colony
         private RGBA[][] AirColors;
         private RGBA[][] FoodColors;
         private RGBA[][] DeadAntColors;
-        private RGBA BrownColor = new RGBA { R = 139, G = 69, B = 19, A = 255 };
-        private RGBA PurpleColor = new RGBA { R = 128, G = 0, B = 128, A = 255 };
-        private RGBA WhiteColor = new RGBA { R = 250, G = 250, B = 250, A = 255 };
-        private RGBA RedColor = new RGBA { R = 255, G = 0, B = 0, A = 255 };
-        private RGBA GreenColor = new RGBA { R = 0, G = 255, B = 0, A = 255 };
-        private RGBA RustColor = new RGBA { R = 210, G = 105, B = 30, A = 255 };
+        private RGBA[][] WasteColors;
+        private static readonly RGBA BrownColor = new RGBA { R = 92, G = 61, B = 42, A = 255 };
+        private static readonly RGBA WasteColor = new RGBA { R = 119, G = 80, B = 53, A = 255 };
+        private static readonly RGBA AirColor = new RGBA { R = 35, G = 39, B = 40, A = 255 };
+        private static readonly RGBA FoodColor = new RGBA { R = 117, G = 145, B = 72, A = 255 };
+        private static readonly RGBA PurpleColor = new RGBA { R = 174, G = 126, B = 181, A = 190 };
+        private static readonly RGBA WhiteColor = new RGBA { R = 225, G = 211, B = 174, A = 190 };
+        private static readonly RGBA RedColor = new RGBA { R = 196, G = 112, B = 72, A = 190 };
+        private static readonly RGBA GreenColor = new RGBA { R = 122, G = 164, B = 92, A = 190 };
+        private static readonly RGBA RustColor = new RGBA { R = 151, G = 91, B = 61, A = 255 };
+        private static readonly RGBA RimColor = new RGBA { R = 104, G = 91, B = 73, A = 255 };
         private Terrain Terrain;
         private PheromoneType ActivePheromone;
+
+        private static RGBA Vary(RGBA color, float variation, byte alpha)
+        {
+            return new RGBA
+            {
+                R = Clamp(color.R + (color.R * variation)),
+                G = Clamp(color.G + (color.G * variation)),
+                B = Clamp(color.B + (color.B * variation)),
+                A = alpha
+            };
+        }
+
+        private static byte Clamp(float value)
+        {
+            return (byte)Math.Max(0f, Math.Min(255f, value));
+        }
 
         private void DisplayDropPheromone(IGraphics g, RGBA color, DirectionType dir, float x, float y)
         {
             if (dir == DirectionType.None) return;
 
             // display drop Pheromone
-            g.Ellipse(color, x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight / 2, Terrain.BlockWidth / 4, Terrain.BlockHeight / 4, fill: true, border: false);
+            g.Ellipse(color, x + (Terrain.BlockWidth * 0.38f), y + (Terrain.BlockHeight * 0.38f), Terrain.BlockWidth * 0.24f, Terrain.BlockHeight * 0.24f, fill: false, border: true, thickness: 2f);
         }
 
         private void DisplayMovePheromone(IGraphics g, RGBA color, DirectionType dir, float x, float y)
@@ -236,28 +238,20 @@ namespace colony
             switch (dir)
             {
                 case DirectionType.Up:
-                    g.Triangle(color,
-                        x + Terrain.BlockWidth / 2, y,
-                        x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
-                        x, y + Terrain.BlockHeight / 2, fill: true, border: false);
+                    g.Line(color, x + Terrain.BlockWidth * 0.25f, y + Terrain.BlockHeight * 0.62f, x + Terrain.BlockWidth * 0.5f, y + Terrain.BlockHeight * 0.35f, 2f);
+                    g.Line(color, x + Terrain.BlockWidth * 0.75f, y + Terrain.BlockHeight * 0.62f, x + Terrain.BlockWidth * 0.5f, y + Terrain.BlockHeight * 0.35f, 2f);
                     break;
                 case DirectionType.Down:
-                    g.Triangle(color,
-                        x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight,
-                        x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
-                        x, y + Terrain.BlockHeight / 2, fill: true, border: false);
+                    g.Line(color, x + Terrain.BlockWidth * 0.25f, y + Terrain.BlockHeight * 0.38f, x + Terrain.BlockWidth * 0.5f, y + Terrain.BlockHeight * 0.65f, 2f);
+                    g.Line(color, x + Terrain.BlockWidth * 0.75f, y + Terrain.BlockHeight * 0.38f, x + Terrain.BlockWidth * 0.5f, y + Terrain.BlockHeight * 0.65f, 2f);
                     break;
                 case DirectionType.Left:
-                    g.Triangle(color,
-                        x, y + Terrain.BlockHeight / 2,
-                        x + Terrain.BlockWidth / 2, y,
-                        x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight, fill: true, border: false);
+                    g.Line(color, x + Terrain.BlockWidth * 0.62f, y + Terrain.BlockHeight * 0.25f, x + Terrain.BlockWidth * 0.35f, y + Terrain.BlockHeight * 0.5f, 2f);
+                    g.Line(color, x + Terrain.BlockWidth * 0.62f, y + Terrain.BlockHeight * 0.75f, x + Terrain.BlockWidth * 0.35f, y + Terrain.BlockHeight * 0.5f, 2f);
                     break;
                 case DirectionType.Right:
-                    g.Triangle(color,
-                        x + Terrain.BlockWidth, y + Terrain.BlockHeight / 2,
-                        x + Terrain.BlockWidth / 2, y,
-                        x + Terrain.BlockWidth / 2, y + Terrain.BlockHeight, fill: true, border: false);
+                    g.Line(color, x + Terrain.BlockWidth * 0.38f, y + Terrain.BlockHeight * 0.25f, x + Terrain.BlockWidth * 0.65f, y + Terrain.BlockHeight * 0.5f, 2f);
+                    g.Line(color, x + Terrain.BlockWidth * 0.38f, y + Terrain.BlockHeight * 0.75f, x + Terrain.BlockWidth * 0.65f, y + Terrain.BlockHeight * 0.5f, 2f);
                     break;
                 default:
                     throw new Exception("invalid direction");

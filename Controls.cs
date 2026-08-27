@@ -79,9 +79,9 @@ namespace colony
                 // realign the controls
                 var top = g.Height * 0.02f;
                 var left = g.Width * 0.02f;
-                var width = g.Width * 0.05f;
-                var height = width;
-                var padding = width / 2f;
+                var width = Math.Max(92f, g.Width * 0.075f);
+                var height = Math.Max(34f, width * 0.34f);
+                var padding = Math.Max(6f, height * 0.22f);
 
                 // ensure the controls do not run off the screen
                 while ((height * Buttons.Count) + (padding * Buttons.Count) > (g.Height - height)) padding--;
@@ -106,17 +106,36 @@ namespace colony
             // draw the controls
             g.DisableTranslation();
             {
+                var panelPadding = 12f;
+                var panelLeft = Buttons[0].Left - panelPadding;
+                var panelTop = Buttons[0].Top - panelPadding;
+                var panelWidth = Buttons[0].Width + (panelPadding * 2);
+                var panelBottom = Buttons[Buttons.Count - 1].Top + Buttons[Buttons.Count - 1].Height + panelPadding;
+                g.Rectangle(Panel, panelLeft, panelTop, panelWidth, panelBottom - panelTop, fill: true, border: true, thickness: 1f);
+
                 for (int i = 0; i<Buttons.Count; i++)
                 {
-                    g.Rectangle(Buttons[i].Color,
+                    g.Rectangle(Buttons[i].IsSelected ? Selected : Button,
                         Buttons[i].Left,
                         Buttons[i].Top,
                         Buttons[i].Width,
                         Buttons[i].Height,
                         fill: true,
-                        border: Buttons[i].IsSelected,
-                        thickness: 10);
-                    g.Text(RGBA.Black, x: Buttons[i].Left + (Buttons[i].Width / 4), y: Buttons[i].Top + (Buttons[i].Height / 2), text: Buttons[i].Purpose, fontsize: 12f);
+                        border: true,
+                        thickness: Buttons[i].IsSelected ? 3f : 1f);
+                    g.Rectangle(Buttons[i].Color,
+                        Buttons[i].Left,
+                        Buttons[i].Top,
+                        Buttons[i].Width * 0.08f,
+                        Buttons[i].Height,
+                        fill: true,
+                        border: false);
+                    g.Text(Text,
+                        x: Buttons[i].Left + (Buttons[i].Width * 0.18f),
+                        y: Buttons[i].Top + (Buttons[i].Height * 0.24f),
+                        text: Buttons[i].Purpose,
+                        fontsize: Math.Max(9f, Buttons[i].Height * 0.28f),
+                        fontname: "Segoe UI");
                 }
             }
             g.EnableTranslation();
@@ -135,6 +154,10 @@ namespace colony
             public bool IsSelected;
         }
         private List<ControlDetails> Buttons;
+        private static readonly RGBA Panel = new RGBA { R = 20, G = 22, B = 23, A = 235 };
+        private static readonly RGBA Button = new RGBA { R = 38, G = 40, B = 40, A = 245 };
+        private static readonly RGBA Selected = new RGBA { R = 68, G = 63, B = 54, A = 255 };
+        private static readonly RGBA Text = new RGBA { R = 231, G = 226, B = 211, A = 255 };
         private float PreviousSurfaceWidth;
         private float PreviousSurfaceHeight;
         #endregion

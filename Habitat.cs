@@ -39,7 +39,11 @@ namespace colony
             // basic background
             var width = 10000;
             var height = 800;
-            var background = new Background(width, height) { GroundColor = new RGBA { R = 100, G = 100, B = 100, A = 255 }, BasePace = 2f };
+            var background = new Background(width, height)
+            {
+                GroundColor = new RGBA { R = 18, G = 20, B = 22, A = 255 },
+                BasePace = 2f
+            };
 
             // initial the terrain blocks
             //TerrainGenerator.SplitInHalf(rows: 100, columns: 100, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
@@ -70,15 +74,15 @@ namespace colony
 
             // create the HUD
             Hud = new Controls();
-            Hud.AddControl(PheromoneType.MoveDirt, new RGBA() { R = 255, G = 0, B = 0, A = 255 }, "dirt");
-            Hud.AddControl(PheromoneType.DropDirt, new RGBA() { R = 255, G = 0, B = 0, A = 100 }, "drop");
-            Hud.AddControl(PheromoneType.MoveFood, new RGBA() { R = 0, G = 255, B = 0, A = 255 }, "food");
-            Hud.AddControl(PheromoneType.DropFood, new RGBA() { R = 0, G = 255, B = 0, A = 100 }, "drop");
-            Hud.AddControl(PheromoneType.MoveEgg, new RGBA() { R = 255, G = 255, B = 255, A = 255 }, "egg");
-            Hud.AddControl(PheromoneType.DropEgg, new RGBA() { R = 255, G = 255, B = 255, A = 100 }, "drop");
-            Hud.AddControl(PheromoneType.MoveDeadAnt, new RGBA() { R = 210, G = 105, B = 30, A = 200 }, "dead");
-            Hud.AddControl(PheromoneType.DropDeadAnt, new RGBA() { R = 210, G = 105, B = 30, A = 100 }, "drop");
-            Hud.AddControl(PheromoneType.MoveQueen, new RGBA() { R = 128, G = 0, B = 128, A = 255 }, "queen");
+            Hud.AddControl(PheromoneType.MoveDirt, new RGBA() { R = 196, G = 112, B = 72, A = 255 }, "DIG");
+            Hud.AddControl(PheromoneType.DropDirt, new RGBA() { R = 132, G = 78, B = 55, A = 255 }, "PILE");
+            Hud.AddControl(PheromoneType.MoveFood, new RGBA() { R = 122, G = 164, B = 92, A = 255 }, "FORAGE");
+            Hud.AddControl(PheromoneType.DropFood, new RGBA() { R = 76, G = 116, B = 72, A = 255 }, "STORE");
+            Hud.AddControl(PheromoneType.MoveEgg, new RGBA() { R = 225, G = 211, B = 174, A = 255 }, "BROOD");
+            Hud.AddControl(PheromoneType.DropEgg, new RGBA() { R = 164, G = 148, B = 116, A = 255 }, "NURSERY");
+            Hud.AddControl(PheromoneType.MoveDeadAnt, new RGBA() { R = 151, G = 91, B = 61, A = 255 }, "CARRY");
+            Hud.AddControl(PheromoneType.DropDeadAnt, new RGBA() { R = 103, G = 62, B = 48, A = 255 }, "MIDDEN");
+            Hud.AddControl(PheromoneType.MoveQueen, new RGBA() { R = 174, G = 126, B = 181, A = 255 }, "QUEEN");
 
             // create the world
             World = new World(

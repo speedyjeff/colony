@@ -22,6 +22,7 @@ namespace colony
             PreviousRandomMovement = new Movement();
             FoodCounter = 0;
             Age = (int)Math.Abs(Utility.GetRandom(1f) * BlockConstants.AntAdultAge);
+            WanderAngle = Utility.GetRandom(variance: 180f);
 
             // create the directions and randomize the order
             Points = new engine.Common.Point[]
@@ -116,7 +117,7 @@ namespace colony
             else
             {
                 // create the ant image
-                if (AntImage == null) CreateAntImage(g, color);
+                if (AntImages == null) CreateAntImages(g, color);
 
                 // display that the Queen Ant is in the nest and can lay eggs
                 if (Following == PheromoneType.MoveQueen && IsInNest())
@@ -128,23 +129,26 @@ namespace colony
                 var midFactor = (antSizeFactor / 2f);
                 var antWidth = (Width * (antSizeFactor - midFactor)) + (Width * (midFactor * ((float)Age / (float)BlockConstants.AntAdultAge)));
                 var antHeight = (Height * (antSizeFactor - midFactor)) + (Height * (midFactor * ((float)Age / (float)BlockConstants.AntAdultAge)));
+                antHeight *= 1f + ((float)Math.Sin(GaitPhase) * 0.025f);
 
                 // draw the ant (using 3 points of the parallelogram)
-                RotateAntBoundingBox(antWidth, antHeight);
-                g.Image(AntImage, AntBoundingBox);
+                var antImages = AntImages ?? throw new InvalidOperationException("ant images were not initialized");
+                var bounds = RotateAntBoundingBox(antWidth, antHeight, Angle + ((float)Math.Sin(GaitPhase) * 2.5f));
+                g.Image(antImages[((int)(GaitPhase / Math.PI)) & 1], bounds);
 
                 // draw what the ant is holding
                 if (IsHoldingObject)
                 {
+                    var angleRadians = Angle * (Math.PI / 180f);
+                    var objectX = X + ((float)Math.Sin(angleRadians) * antHeight * 0.42f) - (antWidth / 10f);
+                    var objectY = Y - ((float)Math.Cos(angleRadians) * antHeight * 0.42f) - (antHeight / 10f);
                     if (Following == PheromoneType.MoveDirt)
                     {
-                        // draw a small rectangle
-                        g.Rectangle(Brown, X-(antWidth/2), Y-(antWidth/2), antWidth / 4, antHeight / 4, fill: true, border: true, thickness: 1);
+                        g.Rectangle(Brown, objectX, objectY, antWidth / 5, antHeight / 5, fill: true, border: true, thickness: 1);
                     }
                     else if (Following == PheromoneType.MoveEgg || Following == PheromoneType.MoveFood || Following == PheromoneType.MoveDeadAnt)
                     {
-                        // draw a small ellipse
-                        g.Ellipse(color, X-(antWidth/2), Y-(antWidth/2), antWidth / 4, antHeight / 4, fill: true, border: true, thickness: 1);
+                        g.Ellipse(color, objectX, objectY, antWidth / 5, antHeight / 5, fill: true, border: true, thickness: 1);
                     }
                     else if (Following == PheromoneType.MoveQueen)
                     {
@@ -384,15 +388,18 @@ namespace colony
             var tries = MaxMoveTries;
             do
             {
-                if (Terrain.TryMove(X, Y, Width, Height, move))
+                var steeredMove = SteerTowards(move, tries == MaxMoveTries ? NormalTurnRate : AvoidanceTurnRate);
+                if (Terrain.TryMove(X, Y, Width, Height, steeredMove))
                 {
                     // calculate the angle
-                    angle = engine.Common.Collision.CalculateAngleFromPoint(X, Y, X + move.dX, Y + move.dY);
+                    angle = engine.Common.Collision.CalculateAngleFromPoint(X, Y, X + steeredMove.dX, Y + steeredMove.dY);
 
                     // done
-                    xdelta = move.dX;
-                    ydelta = move.dY;
+                    xdelta = steeredMove.dX;
+                    ydelta = steeredMove.dY;
                     zdelta = 0f;
+                    PreviousMovement = steeredMove;
+                    GaitPhase += 0.72f;
                     return ActionEnum.Move;
                 }
 
@@ -430,34 +437,49 @@ namespace colony
         }
 
         #region private
-        private static RGBA Red = new RGBA { R = 255, G = 0, B = 0, A = 255 };
-        private static RGBA Purple = new RGBA { R = 128, G = 0, B = 128, A = 255 };
-        private static RGBA Green = new RGBA { R = 0, G = 255, B = 0, A = 255 };
-        private static RGBA Brown = new RGBA { R = 139, G = 69, B = 19, A = 255 };
-        private static RGBA Yellow = new RGBA { R = 255, G = 255, B = 0, A = 255 };
-        private static RGBA PaleYellow = new RGBA { R = 255, G = 255, B = 0, A = 100 };
+        private static RGBA Red = new RGBA { R = 119, G = 57, B = 38, A = 255 };
+        private static RGBA Purple = new RGBA { R = 102, G = 62, B = 92, A = 255 };
+        private static RGBA Green = new RGBA { R = 68, G = 87, B = 49, A = 255 };
+        private static RGBA Brown = new RGBA { R = 98, G = 65, B = 42, A = 255 };
+        private static RGBA Yellow = new RGBA { R = 209, G = 169, B = 75, A = 255 };
+        private static RGBA PaleYellow = new RGBA { R = 209, G = 169, B = 75, A = 80 };
         private static RGBA Transparent = new RGBA { R = 1, G = 2, B = 3, A = 255 };
-        private static RGBA Rust = new RGBA { R = 210, G = 105, B = 30, A = 255 };
+        private static RGBA Rust = new RGBA { R = 101, G = 58, B = 43, A = 255 };
         private Point[] Points;
         private DirectionType[] Directions;
         private Terrain Terrain;
         private int RandomDirectionCount;
         private Movement PreviousRandomMovement;
-        private IImage AntImage;
-        private Point[] AntBoundingBox;
+        private IImage[]? AntImages;
+        private Point[]? AntBoundingBox;
+        private Movement PreviousMovement;
+        private float WanderAngle;
+        private float GaitPhase;
 
-        private const int MaxRandomDirectionCount = 16;
+        private const int MaxRandomDirectionCount = 5;
         private const int MaxMoveTries = 5;
+        private const float NormalTurnRate = 0.24f;
+        private const float AvoidanceTurnRate = 0.58f;
 
-        private void CreateAntImage(IGraphics g, RGBA color)
+        private void CreateAntImages(IGraphics g, RGBA color)
         {
-            if (AntImage != null) throw new Exception("must be called only once");
+            if (AntImages != null) throw new Exception("must be called only once");
+
+            AntImages = new IImage[2];
+            for (var frame = 0; frame < AntImages.Length; frame++)
+            {
+                AntImages[frame] = CreateAntImage(g, color, frame == 0 ? -1f : 1f);
+            }
+        }
+
+        private IImage CreateAntImage(IGraphics g, RGBA color, float stride)
+        {
 
             // top is forward (eg. Angle 0 is facing up)
 
             // create the Ant image
-            AntImage = g.CreateImage((int)Width, (int)Height);
-            AntImage.Graphics.Clear(Transparent);
+            var antImage = g.CreateImage((int)Width, (int)Height);
+            antImage.Graphics.Clear(Transparent);
 
             // draw the Ant
             var thickness = 1f;
@@ -476,14 +498,8 @@ namespace colony
             var segmentHeight = Height / 4f;
             var segmentYOffset = bodyHeight / 4f;
 
-            // their segment
-            var thirdWidth = Width;
-            var thirdHeight = Height / 4f;
-            var thirdYOffset = segmentHeight / 2f;
-
             // legs
-            var legLength = Width / 2f;
-            var antennaLength = Height / 4f;
+            var legLength = Width * 0.22f;
             var legThickness = 2f;
 
             // wings
@@ -492,44 +508,46 @@ namespace colony
 
             // center
             var x = Width / 2f;
-            var y = Height / 2f;
-
             // Draw ant head (ellipse)
-            AntImage.Graphics.Ellipse(color, x - (headWidth / 2), y - (Height / 2), headWidth, headHeight, fill: true, border: true, thickness);
+            antImage.Graphics.Ellipse(color, x - (headWidth / 2), 1f, headWidth, headHeight, fill: true, border: true, thickness);
 
             // Draw ant body segments (three ellipses)
-            AntImage.Graphics.Ellipse(color, x - bodyWidth / 2, y - Height / 2 + headHeight + bodyYOffset, bodyWidth, bodyHeight, fill: true, border: true, thickness);
-            AntImage.Graphics.Ellipse(color, x - segmentWidth / 2, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset, segmentWidth, segmentHeight, fill: true, border: true, thickness);
+            var thoraxY = headHeight + bodyYOffset;
+            var abdomenY = thoraxY + bodyHeight + segmentYOffset;
+            antImage.Graphics.Ellipse(color, x - bodyWidth / 2, thoraxY, bodyWidth, bodyHeight, fill: true, border: true, thickness);
+            antImage.Graphics.Ellipse(color, x - segmentWidth / 2, abdomenY, segmentWidth, segmentHeight, fill: true, border: true, thickness);
 
             // Draw ant legs (lines)
             // Top segment legs
-            AntImage.Graphics.Line(color, x - bodyWidth / 2, y - Height / 2 + headHeight + bodyYOffset, x - bodyWidth / 2 - legLength, y - Height / 2 + headHeight + bodyYOffset - legLength / 2, legThickness);
-            AntImage.Graphics.Line(color, x + bodyWidth / 2, y - Height / 2 + headHeight + bodyYOffset, x + bodyWidth / 2 + legLength, y - Height / 2 + headHeight + bodyYOffset - legLength / 2, legThickness);
+            antImage.Graphics.Line(color, x - bodyWidth / 2, thoraxY + bodyHeight * 0.2f, x - bodyWidth / 2 - legLength, thoraxY + (legLength * 0.25f * stride), legThickness);
+            antImage.Graphics.Line(color, x + bodyWidth / 2, thoraxY + bodyHeight * 0.2f, x + bodyWidth / 2 + legLength, thoraxY - (legLength * 0.25f * stride), legThickness);
 
             // Middle segment legs
-            AntImage.Graphics.Line(color, x - segmentWidth / 2, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset, x - segmentWidth / 2 - legLength, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset - legLength / 2, legThickness);
-            AntImage.Graphics.Line(color, x + segmentWidth / 2, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset, x + segmentWidth / 2 + legLength, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset - legLength / 2, legThickness);
+            antImage.Graphics.Line(color, x - segmentWidth / 2, abdomenY, x - segmentWidth / 2 - legLength, abdomenY + (legLength * 0.2f * stride), legThickness);
+            antImage.Graphics.Line(color, x + segmentWidth / 2, abdomenY, x + segmentWidth / 2 + legLength, abdomenY - (legLength * 0.2f * stride), legThickness);
 
             // Bottom segment legs
-            AntImage.Graphics.Line(color, x - thirdWidth / 2, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset + segmentHeight + thirdYOffset, x - thirdWidth / 2 - legLength, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset + segmentHeight + thirdYOffset - legLength / 2, legThickness);
-            AntImage.Graphics.Line(color, x + thirdWidth / 2, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset + segmentHeight + thirdYOffset, x + thirdWidth / 2 + legLength, y - Height / 2 + headHeight + bodyYOffset + bodyHeight + segmentYOffset + segmentHeight + thirdYOffset - legLength / 2, legThickness);
+            var rearLegY = abdomenY + segmentHeight * 0.65f;
+            antImage.Graphics.Line(color, x - segmentWidth / 2, rearLegY, x - segmentWidth / 2 - legLength, rearLegY - (legLength * 0.3f * stride), legThickness);
+            antImage.Graphics.Line(color, x + segmentWidth / 2, rearLegY, x + segmentWidth / 2 + legLength, rearLegY + (legLength * 0.3f * stride), legThickness);
 
             if (Following == PheromoneType.MoveQueen)
             {
                 // Draw wings (ellipses)
-                AntImage.Graphics.Ellipse(RGBA.White, x - (bodyWidth / 2) - (wingWidth / 2), y + headHeight + bodyYOffset - (wingHeight / 2), wingWidth, wingHeight, fill: true, border: false);
-                AntImage.Graphics.Ellipse(RGBA.White, x + (bodyWidth / 2) - (wingWidth / 2), y + headHeight + bodyYOffset - (wingHeight / 2), wingWidth, wingHeight, fill: true, border: false);
+                antImage.Graphics.Ellipse(new RGBA { R = 219, G = 215, B = 194, A = 170 }, x - (bodyWidth / 2) - (wingWidth / 2), thoraxY, wingWidth, wingHeight, fill: true, border: false);
+                antImage.Graphics.Ellipse(new RGBA { R = 219, G = 215, B = 194, A = 170 }, x + (bodyWidth / 2) - (wingWidth / 2), thoraxY, wingWidth, wingHeight, fill: true, border: false);
             }
 
             // Draw ant antennae (lines)
-            AntImage.Graphics.Line(color, x - headWidth / 4, y - Height / 2, x - headWidth / 4 - antennaLength, y - Height / 2 - antennaLength, legThickness);
-            AntImage.Graphics.Line(color, x + headWidth / 4, y - Height / 2, x + headWidth / 4 + antennaLength, y - Height / 2 - antennaLength, legThickness);
+            antImage.Graphics.Line(color, x - headWidth / 4, headHeight * 0.15f, x - headWidth / 2, 0, legThickness);
+            antImage.Graphics.Line(color, x + headWidth / 4, headHeight * 0.15f, x + headWidth / 2, 0, legThickness);
 
             // remove the background
-            AntImage.MakeTransparent(Transparent);
+            antImage.MakeTransparent(Transparent);
+            return antImage;
         }
 
-        private void RotateAntBoundingBox(float width, float height)
+        private Point[] RotateAntBoundingBox(float width, float height, float angle)
         {
             if (AntBoundingBox == null) AntBoundingBox = new engine.Common.Point[3];
 
@@ -543,7 +561,7 @@ namespace colony
             AntBoundingBox[2] = new Point() { X = X - width / 2, Y = Y + height / 2 };
 
             // convert angle from degrees to radians
-            var rads = (float)(Angle * (Math.PI / 180));
+            var rads = (float)(angle * (Math.PI / 180));
 
             // rotate each point around {X,Y}
             for (var i = 0; i < AntBoundingBox.Length; i++)
@@ -557,6 +575,8 @@ namespace colony
                 AntBoundingBox[i].X = (cosTheta * dx) - (sinTheta * dy) + X;
                 AntBoundingBox[i].Y = (sinTheta * dx) + (cosTheta * dy) + Y;
             }
+
+            return AntBoundingBox;
         }
 
         private Movement AdjustMovementAroundBlock(DirectionType direction)
@@ -677,7 +697,7 @@ namespace colony
         {
             if ((d1 == DirectionType.Up || d1 == DirectionType.Down) && (d2 == DirectionType.Left || d2 == DirectionType.Right)) return true;
             if ((d1 == DirectionType.Left || d1 == DirectionType.Right) && (d2 == DirectionType.Up || d2 == DirectionType.Down)) return true;
-            return true;
+            return false;
         }
 
         private Movement PheromoneDirectionToMovement(DirectionType direction)
@@ -780,30 +800,49 @@ namespace colony
 
         private Movement GetRandomMovement()
         {
-            // no pheromone trail, pick a random direction
-            var move = new Movement();
-
-            // once a direction is picked, go in that direction for a while
-            if (--RandomDirectionCount > 0)
+            if (--RandomDirectionCount <= 0)
             {
-                move.dX = PreviousRandomMovement.dX;
-                move.dY = PreviousRandomMovement.dY;
-                return move;
+                WanderAngle += Utility.GetRandom(variance: 28f);
+                RandomDirectionCount = MaxRandomDirectionCount;
             }
 
-            // choose an angle and derive a move based on it
-            var angle = Utility.GetRandom(variance: 360f);
-            Collision.CalculateLineByAngle(x: 0, y: 0, angle, distance: 0.7f, out float x1, out float y1, out move.dX, out move.dY);
+            var move = new Movement();
+            Collision.CalculateLineByAngle(
+                x: 0,
+                y: 0,
+                WanderAngle,
+                distance: 0.9f,
+                out _,
+                out _,
+                out move.dX,
+                out move.dY);
 
-            // ensure the direction is valid
-            var sum = (Math.Abs(move.dX) + Math.Abs(move.dY)) - 1f;
-            if (sum > 0f) throw new Exception("invalid move");
+            PreviousRandomMovement = NormalizeMovement(move);
+            return PreviousRandomMovement;
+        }
 
-            // retain this direction
-            RandomDirectionCount = MaxRandomDirectionCount;
-            PreviousRandomMovement.dX = move.dX;
-            PreviousRandomMovement.dY = move.dY;
-            return move;
+        private Movement SteerTowards(Movement desired, float turnRate)
+        {
+            desired = NormalizeMovement(desired);
+            if (PreviousMovement.IsDefault()) return desired;
+
+            var movement = new Movement
+            {
+                dX = PreviousMovement.dX + ((desired.dX - PreviousMovement.dX) * turnRate),
+                dY = PreviousMovement.dY + ((desired.dY - PreviousMovement.dY) * turnRate)
+            };
+
+            return NormalizeMovement(movement);
+        }
+
+        private static Movement NormalizeMovement(Movement movement)
+        {
+            var total = Math.Abs(movement.dX) + Math.Abs(movement.dY);
+            if (total <= 0f) return movement;
+
+            movement.dX = (movement.dX / total) * 0.9f;
+            movement.dY = (movement.dY / total) * 0.9f;
+            return movement;
         }
 
         private bool IsInNest()
