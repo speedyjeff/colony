@@ -20,6 +20,7 @@ namespace colony
         }
 
         public Action<PheromoneType> OnSelectionChange { get; set; }
+        public Action? OnRestart { get; set; }
 
         public void AddControl(PheromoneType type, RGBA color, string purpose)
         {
@@ -32,6 +33,14 @@ namespace colony
 
         public bool TryMouseDown(MouseButton btn, float x, float y)
         {
+            if (btn == MouseButton.Left &&
+                x >= RestartLeft && x <= RestartLeft + RestartWidth &&
+                y >= RestartTop && y <= RestartTop + RestartHeight)
+            {
+                OnRestart?.Invoke();
+                return true;
+            }
+
             // sanity check
             if (Buttons == null || Buttons.Count == 0) return false;
 
@@ -82,6 +91,10 @@ namespace colony
                 var width = Math.Max(92f, g.Width * 0.075f);
                 var height = Math.Max(34f, width * 0.34f);
                 var padding = Math.Max(6f, height * 0.22f);
+                RestartWidth = width;
+                RestartHeight = height;
+                RestartLeft = g.Width - left - RestartWidth;
+                RestartTop = top;
 
                 // ensure the controls do not run off the screen
                 while ((height * Buttons.Count) + (padding * Buttons.Count) > (g.Height - height)) padding--;
@@ -137,6 +150,36 @@ namespace colony
                         fontsize: Math.Max(9f, Buttons[i].Height * 0.28f),
                         fontname: "Segoe UI");
                 }
+
+                g.Rectangle(Panel,
+                    RestartLeft - panelPadding,
+                    RestartTop - panelPadding,
+                    RestartWidth + (panelPadding * 2),
+                    RestartHeight + (panelPadding * 2),
+                    fill: true,
+                    border: true,
+                    thickness: 1f);
+                g.Rectangle(Button,
+                    RestartLeft,
+                    RestartTop,
+                    RestartWidth,
+                    RestartHeight,
+                    fill: true,
+                    border: true,
+                    thickness: 1f);
+                g.Rectangle(Accent,
+                    RestartLeft,
+                    RestartTop,
+                    RestartWidth * 0.08f,
+                    RestartHeight,
+                    fill: true,
+                    border: false);
+                g.Text(Text,
+                    x: RestartLeft + (RestartWidth * 0.18f),
+                    y: RestartTop + (RestartHeight * 0.24f),
+                    text: "RESTART",
+                    fontsize: Math.Max(9f, RestartHeight * 0.28f),
+                    fontname: "Segoe UI");
             }
             g.EnableTranslation();
         }
@@ -158,8 +201,13 @@ namespace colony
         private static readonly RGBA Button = new RGBA { R = 38, G = 40, B = 40, A = 245 };
         private static readonly RGBA Selected = new RGBA { R = 68, G = 63, B = 54, A = 255 };
         private static readonly RGBA Text = new RGBA { R = 231, G = 226, B = 211, A = 255 };
+        private static readonly RGBA Accent = new RGBA { R = 196, G = 150, B = 92, A = 255 };
         private float PreviousSurfaceWidth;
         private float PreviousSurfaceHeight;
+        private float RestartLeft;
+        private float RestartTop;
+        private float RestartWidth;
+        private float RestartHeight;
         #endregion
     }
 }

@@ -23,19 +23,26 @@ namespace colony
 {
     public partial class Habitat : Form
     {
-        public Habitat()
+        internal Habitat()
         {
             InitializeComponent();
 
             // set title
             this.Name = "colony";
             this.Text = "colony";
+            this.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             // set the window size
             this.Width = 1500;
             this.Height = 1500;
             // setting a double buffer eliminates the flicker
             this.DoubleBuffered = true;
 
+            Host = new GameHost(CreateWorld);
+            UI = new InteractionHookup(this, Host);
+        }
+
+        private World CreateWorld(GameOptions options)
+        {
             // basic background
             var width = 10000;
             var height = 800;
@@ -45,11 +52,26 @@ namespace colony
                 BasePace = 2f
             };
 
-            // initial the terrain blocks
-            //TerrainGenerator.SplitInHalf(rows: 100, columns: 100, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
-            //TerrainGenerator.BigEmpty(out BlockDetails[][] scene, out PlayerDetails[] playerDets);
-            //TerrainGenerator.DemoRound(rows: 100, columns: 100, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
-            TerrainGenerator.Demo(rows: 100, columns: 100, out BlockDetails[][] scene, out PlayerDetails[] playerDets);
+            // initialize the selected terrain
+            BlockDetails[][] scene;
+            PlayerDetails[] playerDets;
+            switch (options.Board)
+            {
+                case BoardType.EstablishedColony:
+                    TerrainGenerator.Demo(rows: 100, columns: 100, out scene, out playerDets);
+                    break;
+                case BoardType.CircularNest:
+                    TerrainGenerator.DemoRound(rows: 100, columns: 100, out scene, out playerDets);
+                    break;
+                case BoardType.FreshGround:
+                    TerrainGenerator.SplitInHalf(rows: 100, columns: 100, out scene, out playerDets);
+                    break;
+                case BoardType.OpenSwarm:
+                    TerrainGenerator.BigEmpty(out scene, out playerDets);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(options.Board));
+            }
 
             // init
             MouseButton = engine.Common.MouseButton.None;
@@ -61,7 +83,7 @@ namespace colony
                 Terrain.Speed > (Terrain.BlockHeight / 2)) throw new Exception("speed is too fast for the terrain");
 
             // add blocks
-            var blocks = new Blocks(Terrain) { X = 0, Y = 0 };
+            var blocks = new Blocks(Terrain, options.ShowPheromoneTrails) { X = 0, Y = 0 };
 
             // add the camera and starting ants
             Camera = new Camera() { Name = "camera", X = 0, Y = 0 };
@@ -91,7 +113,8 @@ namespace colony
                   Width = width,
                   Height = height,
                   EnableZoom = true,
-                  HUD = Hud
+                  HUD = Hud,
+                  StartMenu = new Menu()
               },
               players,
               new Element[] { blocks },
@@ -109,20 +132,20 @@ namespace colony
             World.OnAfterMouseup += World_OnAfterMouseup;
             Hud.OnSelectionChange += Hud_OnSelectionChange;
             Hud.OnSelectionChange += blocks.SetActivePheromone;
+            Hud.OnRestart += Restart;
             Terrain.OnAddEgg += Terrain_OnAddEgg;
 
-            // start the UI painting
-            UI = new UIHookup(this, World);
-
+            return World;
         }
 
         #region private
-        private UIHookup UI;
-        private World World;
-        private Camera Camera;
+        private InteractionHookup UI;
+        private GameHost Host;
+        private World World = null!;
+        private Camera Camera = null!;
         private MouseButton MouseButton;
-        private Controls Hud;
-        private Terrain Terrain;
+        private Controls Hud = null!;
+        private Terrain Terrain = null!;
         private PheromoneType CurrentPheromone;
 
         private Ant CreateAnt(Terrain terrain, float x, float y, PheromoneType pheromone)
@@ -141,6 +164,15 @@ namespace colony
         private void Hud_OnSelectionChange(PheromoneType type)
         {
             CurrentPheromone = type;
+        }
+
+        private void Restart()
+        {
+            BeginInvoke(() =>
+            {
+                Application.Restart();
+                Close();
+            });
         }
 
         private bool World_OnBeforeMouseDown(Element elem, MouseButton btn, float sx, float sy, float wx, float wy, float wz, ref char key)

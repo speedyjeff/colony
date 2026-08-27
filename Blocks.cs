@@ -7,13 +7,14 @@ namespace colony
 {
     class Blocks : Obstacle
     {
-        public Blocks(Terrain terrain)
+        public Blocks(Terrain terrain, bool showPheromones)
         {
             IsSolid = true;
             Width = terrain.Width;
             Height = terrain.Height;
             Terrain = terrain;
             ActivePheromone = PheromoneType.None;
+            ShowPheromones = showPheromones;
 
             // set the dirt chunk colors
             DirtColors = new RGBA[Terrain.Rows][];
@@ -139,6 +140,8 @@ namespace colony
                     }
 
                     // pheromones
+                    if (!ShowPheromones) continue;
+
                     switch(ActivePheromone)
                     {
                         case PheromoneType.None:
@@ -205,6 +208,7 @@ namespace colony
         private static readonly RGBA RimColor = new RGBA { R = 104, G = 91, B = 73, A = 255 };
         private Terrain Terrain;
         private PheromoneType ActivePheromone;
+        private readonly bool ShowPheromones;
 
         private static RGBA Vary(RGBA color, float variation, byte alpha)
         {
